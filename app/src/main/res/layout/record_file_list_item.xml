@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:clickable="true"
+    android:layout_width="match_parent"
+    android:background="@drawable/record_file_list_item_bg"
+    android:layout_height="wrap_content">
+
+
+    <TextView
+        android:id="@+id/record_file_event_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:text="@string/record_state_normal"
+        android:textColor="@color/ticket_check_bg"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.615" />
+
+    <TextView
+        android:id="@+id/record_file_time_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_primary"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        tools:text="14:42:35" />
+
+
+    <View
+        android:id="@+id/record_file_time_sp"
+        android:layout_width="1dp"
+        android:layout_height="8dp"
+        android:background="@android:color/darker_gray"
+        app:layout_constraintTop_toBottomOf="@+id/record_file_time_start"
+        app:layout_constraintStart_toStartOf="@+id/record_file_time_start"
+        app:layout_constraintEnd_toEndOf="@+id/record_file_time_start"
+        />
+
+    <TextView
+        android:id="@+id/record_file_time_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_primary"
+        app:layout_constraintStart_toStartOf="@+id/record_file_time_start"
+        app:layout_constraintTop_toBottomOf="@+id/record_file_time_sp"
+        tools:text="14:42:48" />
+
+    <TextView
+        android:id="@+id/file_time_second_total"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:textColor="@color/text_secondary"
+        android:text="30s"
+        app:layout_constraintBottom_toBottomOf="@+id/record_file_time_end"
+        app:layout_constraintStart_toEndOf="@id/record_file_time_start"
+        app:layout_constraintTop_toTopOf="@id/record_file_time_start" />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

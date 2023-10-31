@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="ticket_check_bg">#00cc66</color>
+    <color name="ticket_check_fg">#FFFFF0</color>
+    <color name="transparent">#00000000</color>
+    <color name="blue">#03A9F4</color>
+    <color name="red">#F44336</color>
+
+    <!--Calender-->
+    <color name="colorPrimary">#ffffff</color>
+    <color name="colorPrimaryDark">#ffffff</color>
+    <color name="colorAccent">#ffffff</color>
+
+    <color name="line_color">#e7e7e7</color>
+    <color name="content_background">#f2f2f2</color>
+    <color name="solar_background">#009988</color>
+
+    <color name="text_primary">#CC000000</color>
+    <color name="text_secondary">#99000000</color>
+
+    <color name="progress_color_event_action_move">#CC03A9F4</color>
+<!--    <color name="progress_color_event_action_move_end">#1FFF9933</color>-->
+
+    <color name="progress_color_event_people">#CCFF9800</color>
+<!--    <color name="progress_color_event_people_end">#1FFF0033</color>-->
+
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+
+</resources>

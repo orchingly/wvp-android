@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".settings.SettingsFragment">
+
+
+    <EditText
+        android:id="@+id/input_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:ems="10"
+        android:inputType="text"
+        android:hint="@string/tip_ip"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/tip_ip"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.101"
+        app:layout_constraintStart_toEndOf="@+id/tip_ip"
+        app:layout_constraintTop_toTopOf="@+id/tip_ip"
+        app:layout_constraintVertical_bias="0.333"
+        android:autofillHints="" />
+
+    <EditText
+        android:id="@+id/input_port"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="number"
+        android:hint="@string/tip_port"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/tip_port"
+        app:layout_constraintEnd_toEndOf="@+id/input_ip"
+        app:layout_constraintStart_toStartOf="@+id/input_ip"
+        app:layout_constraintTop_toTopOf="@+id/tip_port"
+        android:autofillHints="" />
+
+    <TextView
+        android:id="@+id/tip_ip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="72dp"
+        android:text="@string/tip_ip"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tip_port"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:textSize="20sp"
+        android:text="@string/tip_port"
+        app:layout_constraintStart_toStartOf="@+id/tip_ip"
+        app:layout_constraintTop_toBottomOf="@+id/tip_ip" />
+
+    <CheckBox
+        android:id="@+id/enable_tls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:textSize="20sp"
+        android:checked="false"
+        android:clickable="false"
+        android:enabled="false"
+        android:text="@string/enable_tls"
+        app:layout_constraintStart_toStartOf="@+id/tip_port"
+        app:layout_constraintTop_toBottomOf="@+id/tip_port" />
+
+
+    <com.ly.wvp.widget.check.FinishTicket
+        android:id="@+id/save_finish"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:check_base_color="@color/ticket_check_bg"
+        app:check_tick_color="@color/ticket_check_fg"
+        app:uncheck_base_color="#00000000"
+        app:uncheck_tick_color="#00000000"
+
+        app:custom_size="@dimen/check_size"
+
+        app:layout_constraintBottom_toTopOf="@id/btn_save"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/enable_tls" />
+
+    <Button
+        android:id="@+id/btn_go_login"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/btn_save_bg"
+        android:text="@string/go_login"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_save"
+        app:layout_constraintEnd_toEndOf="@+id/btn_save"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/btn_save" />
+
+    <Button
+        android:id="@+id/btn_save"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="100dp"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:background="@drawable/btn_save_bg"
+        android:text="@string/btn_save"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <include layout="@layout/bottom_nav_layout"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:background="@drawable/device_channel_item_bg">
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/channel_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="device_channel_id, device_channel_manufactory,device_channel_snapshot, has_audio"/>
+
+    <TextView
+        android:id="@+id/device_channel_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="43000000801320000008" />
+
+
+    <TextView
+        android:id="@+id/has_audio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="@+id/device_channel_id"
+        app:layout_constraintTop_toBottomOf="@+id/device_channel_id"
+        tools:text="音频开启" />
+
+    <!--16:9-->
+    <TextView
+        android:id="@+id/device_channel_manufactory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="@+id/has_audio"
+        app:layout_constraintTop_toBottomOf="@+id/has_audio"
+        tools:text="TP-LINK" />
+
+    <ImageView
+        android:id="@+id/device_channel_snapshot"
+        android:layout_width="240dp"
+        android:layout_height="135dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/black"
+        android:contentDescription="@string/device_channel_snapshot"
+        android:scaleType="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/has_audio"
+        app:layout_constraintTop_toBottomOf="@+id/device_channel_id"
+        tools:srcCompat="@tools:sample/avatars" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

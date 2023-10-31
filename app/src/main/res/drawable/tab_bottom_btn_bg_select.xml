@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!--定义圆角-->
+    <corners android:radius="0dp"/>
+    <!--指定内部的填充色-->
+    <solid android:color="@color/design_default_color_primary_dark"/>
+    <!--矩形的边框线-->
+    <stroke android:color="@color/design_default_color_primary" android:width="0.5dp"/>
+
+</shape>

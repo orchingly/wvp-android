@@ -1,0 +1,273 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">wvp-android</string>
+    <string name="login_text">登录</string>
+    <string name="login_user">用户名</string>
+    <string name="login_passwd">密码</string>
+    <string name="input_user_passwd">请输入用户名或密码</string>
+    <string name="user_login_success">登录成功</string>
+    <string name="user_login_failed">登录失败</string>
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome!"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+
+
+    <string name="device_list_title">设备列表</string>
+    <string name="device_channel_snapshot">快照</string>
+    <string name="device_list_empty_title">无设备</string>
+
+    <!--Video player设置-->
+    <string name="display_size_16_9">16:9</string>
+    <string name="display_size_4_3">4:3</string>
+    <string name="full_screen">全屏</string>
+    <string name="full_screen_pull">拉伸全屏</string>
+    <string name="screen_default_size">默认比例</string>
+    <string name="device_not_found">未找到设备</string>
+    <string name="video_load_failed">加载失败</string>
+
+    <!--底部导航栏-->
+    <string name="tab_devices">国标设备</string>
+    <string name="tab_record">云端录像</string>
+    <string name="tab_settings">设置</string>
+
+    <string name="tip_ip">服务器IP</string>
+    <string name="tip_port">端口</string>
+    <string name="enable_tls">启用HTTPS</string>
+    <string name="btn_save">保存</string>
+
+    <string name="tip_port_not_null">端口错误</string>
+    <string name="tip_ip_not_null">IP错误</string>
+    <string name="go_config_service">配置服务器</string>
+    <string name="tip_selection_media">节点选择</string>
+    <string name="record_act_go">查看</string>
+    <!--录像状态监控-->
+    <string name="record_state_unknown">未知</string>
+    <string name="record_state_normal">正常</string>
+    <string name="record_state_people">有人</string>
+    <string name="record_state_move">移动</string>
+
+    <string name="action_bar_back_desc">返回</string>
+
+
+    <!--日历组件-->
+    <string name="cv_app_name">CalendarView</string>
+    <string-array name="lunar_first_of_month">
+        <item>春节</item>
+        <item>二月</item>
+        <item>三月</item>
+        <item>四月</item>
+        <item>五月</item>
+        <item>六月</item>
+        <item>七月</item>
+        <item>八月</item>
+        <item>九月</item>
+        <item>十月</item>
+        <item>冬月</item>
+        <item>腊月</item>
+    </string-array>
+
+    <string-array name="tradition_festival">
+        <item>除夕</item>
+        <item>0101春节</item>
+        <item>0115元宵</item>
+        <item>0505端午</item>
+        <item>0707七夕</item>
+        <item>0815中秋</item>
+        <item>0909重阳</item>
+    </string-array>
+
+    <string-array name="lunar_str">
+        <item>初一</item>
+        <item>初二</item>
+        <item>初三</item>
+        <item>初四</item>
+        <item>初五</item>
+        <item>初六</item>
+        <item>初七</item>
+        <item>初八</item>
+        <item>初九</item>
+        <item>初十</item>
+        <item>十一</item>
+        <item>十二</item>
+        <item>十三</item>
+        <item>十四</item>
+        <item>十五</item>
+        <item>十六</item>
+        <item>十七</item>
+        <item>十八</item>
+        <item>十九</item>
+        <item>二十</item>
+        <item>廿一</item>
+        <item>廿二</item>
+        <item>廿三</item>
+        <item>廿四</item>
+        <item>廿五</item>
+        <item>廿六</item>
+        <item>廿七</item>
+        <item>廿八</item>
+        <item>廿九</item>
+        <item>三十</item>
+    </string-array>
+
+    <string-array name="solar_festival" tools:ignore="InconsistentArrays">
+        <item>0101元旦</item>
+        <item>0214情人节</item>
+        <item>0308妇女节</item>
+        <item>0312植树节</item>
+        <item>0315消权日</item>
+        <item>0401愚人节</item>
+        <item>0422地球日</item>
+        <item>0501劳动节</item>
+        <item>0504青年节</item>
+        <item>0601儿童节</item>
+        <item>0701建党节</item>
+        <item>0801建军节</item>
+        <item>0910教师节</item>
+        <item>1001国庆节</item>
+        <item>1031万圣节</item>
+        <item>1111光棍节</item>
+        <item>1224平安夜</item>
+        <item>1225圣诞节</item>
+    </string-array>
+
+    <string-array name="solar_term">
+        <item>春分</item>
+        <item>清明</item>
+        <item>谷雨</item>
+        <item>立夏</item>
+        <item>小满</item>
+        <item>芒种</item>
+        <item>夏至</item>
+        <item>小暑</item>
+        <item>大暑</item>
+        <item>立秋</item>
+        <item>处暑</item>
+        <item>白露</item>
+        <item>秋分</item>
+        <item>寒露</item>
+        <item>霜降</item>
+        <item>立冬</item>
+        <item>小雪</item>
+        <item>大雪</item>
+        <item>冬至</item>
+        <item>小寒</item>
+        <item>大寒</item>
+        <item>立春</item>
+        <item>雨水</item>
+        <item>惊蛰</item>
+    </string-array>
+
+    <string-array name="special_festivals">
+        <item>母亲节</item>
+        <item>父亲节</item>
+        <item>感恩节</item>
+    </string-array>
+
+    <string name="sun">Sun</string>
+    <string name="mon">Mon</string>
+    <string name="tue">Tue</string>
+    <string name="wed">Wed</string>
+    <string name="thu">Thu</string>
+    <string name="fri">Fri</string>
+    <string name="sat">Sat</string>
+    <string name="go_login">去登录</string>
+
+    <string-array name="week_string_array">
+        <item>Sun</item>
+        <item>Mon</item>
+        <item>Tue</item>
+        <item>Wed</item>
+        <item>Thu</item>
+        <item>Fri</item>
+        <item>Sat</item>
+    </string-array>
+
+    <string-array name="year_view_week_string_array">
+        <item>S</item>
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+    </string-array>
+
+    <string-array name="month_string_array">
+        <item>JAN</item>
+        <item>FEB</item>
+        <item>MAR</item>
+        <item>APR</item>
+        <item>MAY</item>
+        <item>JUN</item>
+        <item>JUL</item>
+        <item>AUG</item>
+        <item>SEP</item>
+        <item>OCT</item>
+        <item>NOV</item>
+        <item>DEC</item>
+    </string-array>
+
+    <integer-array name="trunk_integer_array">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+
+    </integer-array>
+
+    <string-array name="trunk_string_array">
+        <item>辛</item>
+        <item>壬</item>
+        <item>癸</item>
+        <item>甲</item>
+        <item>乙</item>
+        <item>丙</item>
+        <item>丁</item>
+        <item>戊</item>
+        <item>己</item>
+        <item>庚</item>
+    </string-array>
+
+    <integer-array name="branch_integer_array">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+    </integer-array>
+
+    <string-array name="branch_string_array">
+        <item>酉</item>
+        <item>戌</item>
+        <item>亥</item>
+        <item>子</item>
+        <item>丑</item>
+        <item>寅</item>
+        <item>卯</item>
+        <item>辰</item>
+        <item>巳</item>
+        <item>午</item>
+        <item>未</item>
+        <item>申</item>
+
+    </string-array>
+
+</resources>

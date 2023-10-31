@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:background="@drawable/record_item_bg"
+    android:clickable="true"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/record_app"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="@+id/record_stream_id"
+        app:layout_constraintTop_toBottomOf="@+id/record_stream_id"
+        tools:text="rtp" />
+
+    <TextView
+        android:id="@+id/record_stream_id"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:maxLines="3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="43000000801320000008_43000000801310000008" />
+
+    <TextView
+        android:id="@+id/record_create_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/record_app"
+        app:layout_constraintStart_toEndOf="@+id/record_app"
+        app:layout_constraintTop_toTopOf="@+id/record_app"
+        tools:text="2023-03-02 10:32:38" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

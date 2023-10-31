@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navi_graph"
+    app:startDestination="@id/deviceListFragment">
+
+    <fragment
+        android:id="@+id/deviceListFragment"
+        android:name="com.ly.wvp.device.DeviceListFragment"
+        android:label="fragment_device_list"
+        tools:layout="@layout/fragment_gb_device_list" />
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.ly.wvp.ui.login.LoginFragment"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login" >
+    </fragment>
+
+    <fragment
+        android:id="@+id/liveDetailPlayerFragment"
+        android:name="com.ly.wvp.device.play.LiveDetailPlayerFragment"
+        android:label="fragment_live_detail_player_frament"
+        tools:layout="@layout/fragment_live_detail_player_frament" >
+        <argument
+            android:name="device_id"
+            app:argType="string" />
+        <argument
+            android:name="channel_id"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/cloudRecordListFragment"
+        android:name="com.ly.wvp.record.CloudRecordListFragment"
+        android:label="fragment_cloud_record_list"
+        tools:layout="@layout/fragment_cloud_record_list" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.ly.wvp.settings.SettingsFragment"
+        android:label="fragment_settings"
+        tools:layout="@layout/fragment_settings" />
+    <fragment
+        android:id="@+id/settingsBeforeLoginFragment"
+        android:name="com.ly.wvp.settings.SettingsBeforeLoginFragment"
+        android:label="SettingsBeforeLoginFragment" />
+    <fragment
+        android:id="@+id/cloudRecordDetailFragment"
+        android:name="com.ly.wvp.record.detail.CloudRecordDetailFragment"
+        android:label="fragment_cloud_record_detail"
+        tools:layout="@layout/fragment_cloud_record_detail">
+        <argument
+            android:name="app"
+            app:argType="string" />
+        <argument
+            android:name="stream"
+            app:argType="string" />
+        <argument
+            android:name="server"
+            app:argType="string" />
+        <argument
+            android:name="serverIp"
+            app:argType="string" />
+        <argument
+            android:name="httpPort"
+            app:argType="integer" />
+        <argument
+            android:name="httpsPort"
+            app:argType="integer" />
+    </fragment>
+
+</navigation>
