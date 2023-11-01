@@ -1,5 +1,6 @@
 package com.ly.wvp.device.channel
 
+import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,7 @@ import androidx.navigation.NavOptions
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.ly.wvp.R
+import com.ly.wvp.auth.NetError
 import com.ly.wvp.data.model.DeviceChanel
 import com.ly.wvp.data.storage.DataStorage
 import com.ly.wvp.device.play.LiveDetailPlayerFragmentArgs
@@ -90,27 +92,42 @@ class ChannelAdapter(private val navController: NavController): Adapter<ChannelA
     private fun bindSnapAsync(holder: ChannelHolder, channelId: String) {
         deviceId?.let {
             CoroutineScope(Dispatchers.IO).launch {
-                val byteArray = snapLoader.loadSnap(it, channelId)
-                if (byteArray != null){
-                    val reqH = holder.snapShot.measuredHeight
-                    val reqW = holder.snapShot.measuredWidth
-                    val bitmap = snapLoader.getBitmapWithReqSize(byteArray, reqW, reqH)
-                    if (bitmap != null){
-                        launch(Main){
-                            holder.snapShot.setImageBitmap(bitmap)
+                //网络异常
+                try {
+                    val byteArray = snapLoader.loadSnap(it, channelId)
+                    if (byteArray != null){
+                        val reqH = holder.snapShot.measuredHeight
+                        val reqW = holder.snapShot.measuredWidth
+                        val bitmap = snapLoader.getBitmapWithReqSize(byteArray, reqW, reqH)
+                        if (bitmap != null){
+                            launch(Main){
+                                holder.snapShot.setImageBitmap(bitmap)
+                            }
+                        }else{
+                            Log.d(TAG, "bindSnapAsync: load snap failed bitmap == null")
                         }
-                    }else{
-                        Log.d(TAG, "bindSnapAsync: load snap failed bitmap == null")
+                    }
+                    else{
+                        Log.w(TAG, "bindSnapAsync: load snap failed stream null")
                     }
                 }
-                else{
-                    Log.w(TAG, "bindSnapAsync: load snap failed stream null")
+                catch (e: Exception){
+                    Log.w(TAG, "bindSnapAsync: ${e.message}")
+                    holder.itemView.context?.let {
+                        shortToast("${NetError.INTERNET_INVALID}:${e.message?: "Net Error"}",  it)
+                    }
                 }
             }
         }
 
     }
 
+    private fun shortToast(cause: String, context: Context){
+        val appContext = context.applicationContext ?: return
+        CoroutineScope(Main).launch {
+            cause.shortToast(appContext)
+        }
+    }
 
     class ChannelHolder(item: View): ViewHolder(item) {
 
