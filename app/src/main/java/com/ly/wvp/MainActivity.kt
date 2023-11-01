@@ -1,18 +1,10 @@
 package com.ly.wvp
 
-import android.os.AsyncTask
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.MemoryFile
-import android.os.Message
+
 import android.util.Log
 import android.view.KeyEvent
-import android.view.MotionEvent
-import android.view.MotionEvent.BUTTON_BACK
-import android.view.ViewManager
-import android.widget.Button
-import android.widget.EditText
+
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 

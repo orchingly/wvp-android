@@ -24,6 +24,7 @@ import com.ly.wvp.R
 import com.ly.wvp.auth.NetError
 import com.ly.wvp.auth.NetError.Companion.AUTH_FAILED
 import com.ly.wvp.data.storage.DataStorage
+import com.ly.wvp.data.storage.SettingsConfig
 import com.ly.wvp.util.shortToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,7 +76,9 @@ class DeviceListFragment : Fragment() {
         }
         deviceListView.addItemDecoration(decoration)
 
-        storage = DataStorage(requireContext())
+        storage = DataStorage.getInstance(requireContext())
+        //没有配置服务器返回登录
+        checkServerConfig(storage.getConfig())
         viewModel.setConfig(storage.getConfig())
 
         viewModel.getDeviceLiveData().observe(viewLifecycleOwner) {
@@ -120,6 +123,12 @@ class DeviceListFragment : Fragment() {
         activateBottomNav(view)
     }
 
+    private fun checkServerConfig(config: SettingsConfig) {
+        if (config.ip.isEmpty()){
+           goLoginFragment()
+        }
+    }
+
     private fun checkError(error: NetError) {
         deviceListView.visibility = GONE
         deviceLoading.visibility = GONE
@@ -127,11 +136,13 @@ class DeviceListFragment : Fragment() {
         shortToast(error.toString())
         //认证失败,跳转登录
         //所有异常均跳转到登录
-//        if (error.getCode() == AUTH_FAILED){
-            navController.navigate(R.id.loginFragment,
-                null,
-                NavOptions.Builder().setPopUpTo(R.id.loginFragment, true).build())
-//        }
+        goLoginFragment()
+    }
+
+    private fun goLoginFragment(){
+        navController.navigate(R.id.loginFragment,
+            null,
+            NavOptions.Builder().setPopUpTo(R.id.loginFragment, true).build())
     }
 
 

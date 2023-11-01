@@ -43,7 +43,7 @@ open class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        storage = DataStorage(requireContext())
+        storage = DataStorage.getInstance(requireContext())
         viewModel = ViewModelProvider(this)[SettingsViewModel::class.java]
         navController = findNavController()
         eIp = view.findViewById(R.id.input_ip)

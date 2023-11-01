@@ -49,7 +49,7 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(root: View, savedInstanceState: Bundle?) {
         super.onViewCreated(root, savedInstanceState)
-        storage = DataStorage(requireContext())
+        storage = DataStorage.getInstance(requireContext())
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())[LoginViewModel::class.java]
         loginViewModel.setConfig(storage.getConfig())
         navController = findNavController()

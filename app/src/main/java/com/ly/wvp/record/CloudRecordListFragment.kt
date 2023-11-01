@@ -7,7 +7,6 @@ import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.NOT_FOCUSABLE
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -52,7 +51,7 @@ class CloudRecordListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        storage = DataStorage(requireContext())
+        storage = DataStorage.getInstance(requireContext())
         viewModel = ViewModelProvider(this)[CloudRecordListViewModel::class.java]
         viewModel.setConfig(storage.getConfig())
         navController = findNavController()

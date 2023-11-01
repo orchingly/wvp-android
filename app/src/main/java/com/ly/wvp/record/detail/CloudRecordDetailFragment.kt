@@ -91,7 +91,7 @@ open class CloudRecordDetailFragment() : Fragment() {
         dayRecordList = view.findViewById(R.id.record_detail_list)
         mTitleOfCalendar = view.findViewById(R.id.action_bar_content_title)
         mActionBack = view.findViewById(R.id.action_bar_back_img)
-        storage = DataStorage(requireContext())
+        storage = DataStorage.getInstance(requireContext())
         viewModel.setConfig(storage.getConfig())
 //        initData()
         fileAdapter = RecordFileListAdapter()

@@ -19,7 +19,6 @@ import com.ly.wvp.util.shortToast
 import com.shuyu.gsyvideoplayer.GSYVideoManager
 import com.shuyu.gsyvideoplayer.builder.GSYVideoOptionBuilder
 import com.shuyu.gsyvideoplayer.listener.GSYSampleCallBack
-import com.shuyu.gsyvideoplayer.listener.VideoAllCallBack
 import com.shuyu.gsyvideoplayer.model.VideoOptionModel
 import com.shuyu.gsyvideoplayer.player.IjkPlayerManager
 import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer
@@ -30,7 +29,6 @@ class LiveDetailPlayerFragment : Fragment() {
 
     companion object {
         private const val TAG = "LiveDetailPlayerFragment"
-        private const val URL = ""
         private const val ENABLE_HTTPS = false
     }
 
@@ -46,8 +44,6 @@ class LiveDetailPlayerFragment : Fragment() {
     private lateinit var storage: DataStorage
 
     private var isPlay = false
-
-    private lateinit var btnPlay: View
 
     private lateinit var mActionBack: ImageView
 
@@ -66,7 +62,7 @@ class LiveDetailPlayerFragment : Fragment() {
         liveInfo = view.findViewById(R.id.live_info)
         mActionBack = view.findViewById(R.id.action_bar_back_img)
         mTitle = view.findViewById(R.id.action_bar_content_title)
-        storage = DataStorage(requireContext())
+        storage = DataStorage.getInstance(requireContext())
 //        resolveNormalVideoUI()
         initVideo()
         viewModel = ViewModelProvider(this)[LiveDetailPlayerViewModel::class.java]

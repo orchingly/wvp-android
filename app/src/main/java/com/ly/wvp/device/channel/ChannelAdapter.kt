@@ -30,7 +30,7 @@ class ChannelAdapter(private val navController: NavController): Adapter<ChannelA
     private var channels: List<DeviceChanel>? = null
 
     private val snapLoader by lazy {
-        ChannelSnapLoader(DataStorage(navController.context).getConfig())
+        ChannelSnapLoader(DataStorage.getInstance(navController.context).getConfig())
     }
 
     fun setChannels(deviceChannel: List<DeviceChanel>?){
