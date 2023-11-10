@@ -160,6 +160,7 @@ class CloudRecordListFragment : Fragment() {
 
     private fun activateBottomNav(view: View){
         view.findViewById<Button>(R.id.tab_device).isSelected = false
+        view.findViewById<Button>(R.id.tab_multi_device_play).isSelected = false
         view.findViewById<Button>(R.id.tab_record).isSelected = true
         view.findViewById<Button>(R.id.tab_settings).isSelected = false
 
@@ -174,6 +175,13 @@ class CloudRecordListFragment : Fragment() {
             navController.navigate(R.id.settingsFragment,
                 null,
                 NavOptions.Builder().setPopUpTo(R.id.settingsFragment, true).build()
+            )
+        }
+
+        view.findViewById<Button>(R.id.tab_multi_device_play).setOnClickListener {
+            navController.navigate(R.id.multiPlayFragment,
+                null,
+                NavOptions.Builder().setPopUpTo(R.id.multiPlayFragment, true).build()
             )
         }
     }

@@ -93,6 +93,7 @@ open class SettingsFragment : Fragment() {
 
     private fun activateBottomNav(view: View){
         view.findViewById<Button>(R.id.tab_device).isSelected = false
+        view.findViewById<Button>(R.id.tab_multi_device_play).isSelected = false
         view.findViewById<Button>(R.id.tab_record).isSelected = false
         view.findViewById<Button>(R.id.tab_settings).isSelected = true
 
@@ -107,6 +108,12 @@ open class SettingsFragment : Fragment() {
                 null,
                 //cloudRecordListFragment及以上全部出栈
                 NavOptions.Builder().setPopUpTo(R.id.cloudRecordListFragment, true).build()
+            )
+        }
+        view.findViewById<Button>(R.id.tab_multi_device_play).setOnClickListener {
+            navController.navigate(R.id.multiPlayFragment,
+                null,
+                NavOptions.Builder().setPopUpTo(R.id.multiPlayFragment, true).build()
             )
         }
     }

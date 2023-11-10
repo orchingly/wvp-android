@@ -22,7 +22,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ly.wvp.R
 import com.ly.wvp.auth.NetError
-import com.ly.wvp.auth.NetError.Companion.AUTH_FAILED
 import com.ly.wvp.data.storage.DataStorage
 import com.ly.wvp.data.storage.SettingsConfig
 import com.ly.wvp.util.shortToast
@@ -97,6 +96,7 @@ class DeviceListFragment : Fragment() {
             deviceAdapter.notifyDataSetChanged()
             //加载channel
             it.forEach {device ->
+                storage.cacheDevice(device)
                 device.getDeviceId()?.let {id ->
                     viewModel.loadDeviceChannelList(id)
                 }
@@ -107,6 +107,7 @@ class DeviceListFragment : Fragment() {
             Log.d(TAG, "onViewCreated: device channel loaded total: ${it.channels().size}")
             val index = deviceAdapter.setDeviceChannelList(it.queryId(), it.channels())
             if (index >= 0){
+                storage.cacheDeviceAndChannels(it)
                 deviceAdapter.notifyItemChanged(index)
             }
         }
@@ -155,6 +156,7 @@ class DeviceListFragment : Fragment() {
 
     private fun activateBottomNav(view: View){
         view.findViewById<Button>(R.id.tab_device).isSelected = true
+        view.findViewById<Button>(R.id.tab_multi_device_play).isSelected = false
         view.findViewById<Button>(R.id.tab_record).isSelected = false
         view.findViewById<Button>(R.id.tab_settings).isSelected = false
 
@@ -170,6 +172,13 @@ class DeviceListFragment : Fragment() {
             navController.navigate(R.id.settingsFragment,
                 null,
                 NavOptions.Builder().setPopUpTo(R.id.settingsFragment, true).build()
+            )
+        }
+
+        view.findViewById<Button>(R.id.tab_multi_device_play).setOnClickListener {
+            navController.navigate(R.id.multiPlayFragment,
+                null,
+                NavOptions.Builder().setPopUpTo(R.id.multiPlayFragment, true).build()
             )
         }
     }

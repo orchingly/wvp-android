@@ -30,8 +30,11 @@
     <string name="device_not_found">未找到设备</string>
     <string name="video_load_failed">加载失败</string>
 
+    <string name="multi_play_device_select">设备选择</string>
+
     <!--底部导航栏-->
     <string name="tab_devices">国标设备</string>
+    <string name="tab_multi_device_play">同屏播放</string>
     <string name="tab_record">云端录像</string>
     <string name="tab_settings">设置</string>
 
@@ -53,6 +56,7 @@
 
     <string name="action_bar_back_desc">返回</string>
 
+    <string name="device_selection_failed">选项操作失败</string>
 
     <!--日历组件-->
     <string name="cv_app_name">CalendarView</string>
@@ -176,6 +180,9 @@
     <string name="fri">Fri</string>
     <string name="sat">Sat</string>
     <string name="go_login">去登录</string>
+    <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
+    <string name="select_desc">选择</string>
 
     <string-array name="week_string_array">
         <item>Sun</item>

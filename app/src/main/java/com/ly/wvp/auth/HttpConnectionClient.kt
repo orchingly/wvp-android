@@ -1,6 +1,7 @@
 package com.ly.wvp.auth
 
 import com.ly.wvp.data.storage.SettingsConfig
+import okhttp3.Call
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,6 +16,11 @@ object HttpConnectionClient {
     fun request(request: Request): Response{
 
         return client.newCall(request).execute()
+    }
+
+
+    fun newCall(request: Request): Call{
+        return client.newCall(request)
     }
 
 
@@ -84,9 +90,6 @@ object HttpConnectionClient {
      *     "msg": "鎴愬姛"
      * }
      */
-    fun queryDevice(){
-
-    }
 
 
 

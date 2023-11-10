@@ -14,7 +14,6 @@ import androidx.navigation.fragment.findNavController
 import com.ly.wvp.R
 import com.ly.wvp.data.model.StreamContent
 import com.ly.wvp.data.storage.DataStorage
-import com.ly.wvp.record.play.SampleCoverVideo
 import com.ly.wvp.util.shortToast
 import com.shuyu.gsyvideoplayer.GSYVideoManager
 import com.shuyu.gsyvideoplayer.builder.GSYVideoOptionBuilder
@@ -34,7 +33,7 @@ class LiveDetailPlayerFragment : Fragment() {
 
     private lateinit var viewModel: LiveDetailPlayerViewModel
 
-    private lateinit var detailPlayer: SampleCoverVideo
+    private lateinit var detailPlayer: LiveVideoPlayer
 //    private lateinit var orientationUtils: OrientationUtils
 
     private lateinit var deviceId: String
@@ -129,14 +128,6 @@ class LiveDetailPlayerFragment : Fragment() {
         }
     }
 
-    private fun initVideoBuilderMode(url: String) {
-
-//        getGSYVideoOptionBuilder(url).setVideoAllCallBack(videoCallback)
-//            .build(detailPlayer)
-
-        buildGSYVideoOptionBuilder(url).build(detailPlayer)
-    }
-
     private fun initVideo(){
         //外部辅助的旋转，帮助全屏
 //        orientationUtils = OrientationUtils(activity, detailPlayer, null)
@@ -220,23 +211,6 @@ class LiveDetailPlayerFragment : Fragment() {
         //END
     }
 
-    private fun getGSYVideoOptionBuilder(url: String): GSYVideoOptionBuilder {
-        //内置封面可参考SampleCoverVideo
-        return GSYVideoOptionBuilder()
-            .setUrl(url)
-            //禁用缓存
-            .setCacheWithPlay(false)
-            .setVideoTitle(channelId)
-            .setIsTouchWiget(true)
-            .setRotateViewAuto(false)
-            .setLockLand(false)
-            .setShowFullAnimation(true) //打开动画
-            .setNeedLockFull(true)
-            .setSeekRatio(1f)
-            .setStartAfterPrepared(true)
-
-    }
-
     private fun buildGSYVideoOptionBuilder(url: String): GSYVideoOptionBuilder {
         IjkPlayerManager.setLogLevel(IjkMediaPlayer.IJK_LOG_SILENT)
         return GSYVideoOptionBuilder()
@@ -277,13 +251,6 @@ class LiveDetailPlayerFragment : Fragment() {
                 }
             })
 
-    }
-
-
-    private fun resolveNormalVideoUI() {
-        //增加title
-        detailPlayer.titleTextView.visibility = View.GONE
-        detailPlayer.backButton.visibility = View.GONE
     }
 
 

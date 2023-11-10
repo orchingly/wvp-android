@@ -23,20 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-/**
- * 带封面
- * Created by guoshuyu on 2017/9/3.
- */
-
 public class SampleCoverVideo extends StandardGSYVideoPlayer {
 
-//    ImageView mCoverImage;
-
-    String mCoverOriginUrl;
-
-    int  mCoverOriginId = 0;
-
-    int mDefaultRes;
 
     private SubsectionSeekBar eventSegmentBar;
 
@@ -108,14 +96,7 @@ public class SampleCoverVideo extends StandardGSYVideoPlayer {
 
     @Override
     public GSYBaseVideoPlayer startWindowFullscreen(Context context, boolean actionBar, boolean statusBar) {
-        GSYBaseVideoPlayer gsyBaseVideoPlayer = super.startWindowFullscreen(context, actionBar, statusBar);
-        SampleCoverVideo sampleCoverVideo = (SampleCoverVideo) gsyBaseVideoPlayer;
-//        if(mCoverOriginUrl != null) {
-//            sampleCoverVideo.loadCoverImage(mCoverOriginUrl, mDefaultRes);
-//        } else  if(mCoverOriginId != 0) {
-//            sampleCoverVideo.loadCoverImageBy(mCoverOriginId, mDefaultRes);
-//        }
-        return gsyBaseVideoPlayer;
+        return super.startWindowFullscreen(context, actionBar, statusBar);
     }
 
 
@@ -176,12 +157,7 @@ public class SampleCoverVideo extends StandardGSYVideoPlayer {
         if (delay == 0) {
             backToNormal();
         } else {
-            postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    backToNormal();
-                }
-            }, delay);
+            postDelayed(this::backToNormal, delay);
         }
 
     }

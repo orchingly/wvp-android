@@ -23,6 +23,10 @@ class DeviceAdapter : Adapter<DeviceHolder>() {
         this.deviceList = deviceList
     }
 
+    /**
+     * 设置Channel
+     * @return 列表的中的位置索引 -1:列表中未找到device
+     */
     fun setDeviceChannelList(deviceId: String, channelList: List<DeviceChanel>): Int{
         deviceList?.let {
             for (i in it.indices){

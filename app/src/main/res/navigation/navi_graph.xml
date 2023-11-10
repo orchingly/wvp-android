@@ -68,5 +68,10 @@
             android:name="httpsPort"
             app:argType="integer" />
     </fragment>
+    <fragment
+        android:id="@+id/multiPlayFragment"
+        android:name="com.ly.wvp.device.onescreen.MultiPlayFragment"
+        android:label="fragment_multi_play"
+        tools:layout="@layout/fragment_multi_play" />
 
 </navigation>

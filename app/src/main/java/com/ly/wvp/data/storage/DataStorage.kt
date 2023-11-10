@@ -4,7 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.util.ArrayMap
 import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.ly.wvp.data.model.Device
+import com.ly.wvp.data.model.LoadDeviceChannel
+import com.ly.wvp.device.onescreen.SelectionItem
 
 class DataStorage(context: Context) {
 
@@ -14,6 +20,8 @@ class DataStorage(context: Context) {
         private const val IP = "ip"
         private const val PORT = "port"
         private const val TLS = "tls"
+
+        private const val MULTI_PLAY_DEVICE_SELECTION = "multi_play_device_selection"
 
         @SuppressLint("StaticFieldLeak")
         @Volatile
@@ -43,6 +51,28 @@ class DataStorage(context: Context) {
 
     private var mConfig: SettingsConfig? = null
 
+    /**
+     * 多设备同屏播放选中结果
+     * 保存到文件
+     */
+    private var mSelectionsCache: ArrayList<SelectionItem>? = null
+
+    /**
+     * 设备和对应的通道列表缓存
+     * 仅缓存,不保存到文件
+     */
+    private val mDeviceChannelCache = ArrayMap<Device, LoadDeviceChannel>()
+
+    /**
+     * Device缓存,用来快速查找Device, deviceId查找Device
+     */
+    private val mDeviceCache = ArrayMap<String, Device>()
+
+    /**
+     * 缓存device列表,服务器返回顺序排列
+     */
+    private val mDeviceCacheWithOrder = ArrayList<String>()
+
     init {
         this.mContext = context.applicationContext
         sp = mContext.getSharedPreferences("wvp", MODE_PRIVATE)
@@ -69,6 +99,94 @@ class DataStorage(context: Context) {
             Log.d(TAG, "getConfig: read config")
             mConfig = SettingsConfig(sp.getString(IP, "") ?: "", sp.getInt(PORT, 0), sp.getBoolean(TLS, false))
             return mConfig as SettingsConfig
+        }
+    }
+
+    /**
+     * 缓存Device
+     */
+    fun cacheDevice(device: Device){
+
+        device.getDeviceId()?.let {
+            //去重
+            if (mDeviceCacheWithOrder.contains(it)){
+                mDeviceCache.remove(it)
+                mDeviceCacheWithOrder.remove(it)
+            }
+            mDeviceCache[it] = device
+            mDeviceCacheWithOrder.add(it)
+        }?:{
+            Log.w(TAG, "cacheDevice: null device id $device")
+        }
+    }
+
+    /**
+     * 缓存Channel
+     */
+    fun cacheDeviceAndChannels(data: LoadDeviceChannel){
+        val device = mDeviceCache[data.queryId()]
+        device?.let {
+            mDeviceChannelCache[it] = data
+        }?: kotlin.run {
+            Log.w(TAG, "cacheDeviceAndChannels: device not found, ${data.queryId()}")
+        }
+    }
+
+    fun getDeviceList(): ArrayList<String>{
+        return mDeviceCacheWithOrder
+    }
+    /**
+     * @return 设备和通道
+     */
+    /*fun getDeviceChannelCache(): ArrayMap<Device, LoadDeviceChannel>{
+        return mDeviceChannelCache
+    }*/
+
+    fun getChannelsByDeviceId(id: String): LoadDeviceChannel?{
+        return mDeviceChannelCache[mDeviceCache[id]]
+    }
+
+    /**
+     * 保存同屏播放的设备列表
+     */
+    fun saveMultiPlayDeviceList(selections: List<SelectionItem>): Boolean{
+        //首次保存时创建缓存,后续同步更新,再次访问返回缓存
+        if (mSelectionsCache == null){
+            mSelectionsCache = ArrayList()
+        }
+        //清空
+        if (selections.isEmpty()){
+            mSelectionsCache?.clear()
+            val ed = sp.edit()
+            ed.remove(MULTI_PLAY_DEVICE_SELECTION)
+            return ed.commit()
+        }
+
+        val gson = Gson()
+        val json = gson.toJson(selections, ArrayList<SelectionItem>().javaClass)
+
+        val ed = sp.edit()
+        ed.putString(MULTI_PLAY_DEVICE_SELECTION, json)
+        Log.d(TAG, "saveMultiPlayDeviceList: $json")
+        val success = ed.commit()
+        //缓存
+        if (success){
+            mSelectionsCache?.clear()
+            mSelectionsCache?.addAll(selections)
+        }
+        return success
+    }
+
+    fun getMultiPlayDeviceList(): ArrayList<SelectionItem>{
+        //缓存不为空,返回缓存
+        mSelectionsCache?.let {
+            return ArrayList(it)
+        }
+        val selectionJson = sp.getString(MULTI_PLAY_DEVICE_SELECTION, "")
+        return if (!selectionJson.isNullOrEmpty()){
+            Gson().fromJson(selectionJson, object :TypeToken<ArrayList<SelectionItem>>(){}.type)
+        }else{
+            ArrayList()
         }
     }
 

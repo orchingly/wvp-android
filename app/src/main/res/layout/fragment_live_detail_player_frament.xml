@@ -15,11 +15,11 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
-        android:text="播放"
+        tools:text="播放"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/detail_player" />
 
-    <com.ly.wvp.record.play.SampleCoverVideo
+    <com.ly.wvp.device.play.LiveVideoPlayer
         android:id="@+id/detail_player"
         android:layout_width="match_parent"
         android:layout_height="200dp"

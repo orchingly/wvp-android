@@ -74,4 +74,6 @@ dependencies {
     //CalendarView
 //    implementation("com.haibin:calendarview:3.7.1")
 
+    //Json
+    implementation("com.google.code.gson:gson:2.9.0")
 }

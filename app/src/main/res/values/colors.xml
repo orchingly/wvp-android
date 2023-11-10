@@ -2,6 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="bg_mask">#1AFFFFFF</color>
 
     <color name="ticket_check_bg">#00cc66</color>
     <color name="ticket_check_fg">#FFFFF0</color>
