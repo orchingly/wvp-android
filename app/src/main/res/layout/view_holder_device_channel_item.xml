@@ -44,8 +44,8 @@
 
     <ImageView
         android:id="@+id/device_channel_snapshot"
-        android:layout_width="240dp"
-        android:layout_height="135dp"
+        android:layout_width="216dp"
+        android:layout_height="121dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
         android:background="@color/black"
@@ -55,7 +55,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/has_audio"
         app:layout_constraintTop_toBottomOf="@+id/device_channel_id"
-        tools:srcCompat="@tools:sample/avatars" />
+        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

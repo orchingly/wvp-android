@@ -4,7 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/record_item_bg">
+    android:background="@drawable/record_item_bg"
+    android:elevation="4dp"
+    android:layout_marginTop="16dp"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
+    >
 
 
     <androidx.constraintlayout.widget.Group
@@ -46,11 +51,15 @@
         tools:text="在线" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:background="@color/white"
         android:id="@+id/device_channel_list"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
         android:layout_marginTop="16dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginBottom="2dp"
+        android:background="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/device_id" />

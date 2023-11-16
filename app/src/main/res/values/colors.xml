@@ -31,4 +31,12 @@
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
 
+    <color name="app_base_color">#1F4377</color>
+    <color name="app_base_color_press">#193964</color>
+    <color name="app_base_color_disable">#731A3B68</color>
+
+    <color name="app_base_color_gray">#808080</color>
+    <color name="app_base_bg">#FAFAFA</color>
+    <color name="app_base_item_bg">#FFFFFF</color>
+    <color name="app_base_item_bg_stroke">#DCDCDC</color>
 </resources>

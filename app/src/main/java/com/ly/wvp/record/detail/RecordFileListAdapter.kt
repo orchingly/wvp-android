@@ -45,6 +45,7 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
     fun updateRecordList(record: List<CloudRecord>){
         recordList.clear()
         recordList.addAll(reformatCloudRecordIfNeeded(record))
+        clickPos = -1
     }
 
     private fun reformatCloudRecordIfNeeded(record: List<CloudRecord>): Collection<CloudRecord> {
@@ -270,6 +271,8 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
         }
         else{
             setRecordTimeColor(holder, context.resources.getColorStateList(R.color.text_primary, context.theme))
+            holder.itemView.isSelected = false
+            holder.itemView.clearFocus()
         }
 
         val eventList = recordList[position].eventList
@@ -376,6 +379,7 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
             //更新点击位置
             clickPos = pos
             setRecordTimeColor(holder, context.resources.getColorStateList(R.color.red, context.theme))
+            holder.itemView.isSelected  = true
         }
     }
 

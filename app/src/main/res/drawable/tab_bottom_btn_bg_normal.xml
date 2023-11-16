@@ -4,8 +4,8 @@
     <!--定义圆角-->
     <corners android:radius="0dp"/>
     <!--指定内部的填充色-->
-    <solid android:color="@color/design_default_color_primary"/>
+    <solid android:color="@color/app_base_color"/>
     <!--矩形的边框线-->
-    <stroke android:color="@color/design_default_color_primary" android:width="0.5dp"/>
+    <stroke android:color="@color/app_base_color" android:width="0.5dp"/>
 
 </shape>

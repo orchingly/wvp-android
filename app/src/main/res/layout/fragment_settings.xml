@@ -78,7 +78,7 @@
         android:id="@+id/save_finish"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:check_base_color="@color/ticket_check_bg"
+        app:check_base_color="@color/app_base_color"
         app:check_tick_color="@color/ticket_check_fg"
         app:uncheck_base_color="#00000000"
         app:uncheck_tick_color="#00000000"
