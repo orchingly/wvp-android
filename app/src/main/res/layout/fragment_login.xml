@@ -88,4 +88,14 @@
         android:textColor="@color/blue"
         app:layout_constraintEnd_toEndOf="@+id/password"
         app:layout_constraintTop_toBottomOf="@+id/password" />
+
+    <RadioButton
+        android:id="@+id/remember_passwd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:text="@string/remember_passwd"
+        app:layout_constraintBottom_toBottomOf="@+id/go_config_service"
+        app:layout_constraintStart_toStartOf="@+id/password"
+        app:layout_constraintTop_toTopOf="@+id/go_config_service" />
 </androidx.constraintlayout.widget.ConstraintLayout>

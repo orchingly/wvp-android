@@ -66,6 +66,8 @@
     <string name="ptz_right">右移</string>
     <string name="ptz_move_control">云台控制</string>
 
+    <string name="remember_passwd">记住密码</string>
+
     <!--日历组件-->
     <string name="cv_app_name">CalendarView</string>
     <string-array name="lunar_first_of_month">

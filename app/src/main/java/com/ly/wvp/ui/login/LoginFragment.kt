@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
+import android.widget.RadioButton
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
@@ -20,12 +22,17 @@ import androidx.navigation.fragment.findNavController
 import com.ly.wvp.R
 import com.ly.wvp.auth.NetError
 import com.ly.wvp.data.storage.DataStorage
+import com.ly.wvp.util.Utils
 import com.ly.wvp.util.shortToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment() {
+
+    companion object{
+        const val TAG = "LoginFragment"
+    }
 
     private lateinit var loginViewModel: LoginViewModel
     private var rootView: View? = null
@@ -38,6 +45,11 @@ class LoginFragment : Fragment() {
     private lateinit var storage: DataStorage
 
     private lateinit var configService: Button
+
+    private lateinit var mRememberPasswd: RadioButton
+    private var isCheck = false
+    private var passwdMd5 = ""
+    private var useRememberPasswd = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,7 +70,8 @@ class LoginFragment : Fragment() {
         btnLogin = root.findViewById(R.id.login)
         loading = root.findViewById(R.id.loading)
         configService = root.findViewById(R.id.go_config_service)
-
+        mRememberPasswd = root.findViewById(R.id.remember_passwd)
+        isCheck = storage.getConfig().rememberPasswd
         loginViewModel.loginFormState.observe(viewLifecycleOwner,
             Observer { loginFormState ->
                 if (loginFormState == null) {
@@ -97,10 +110,22 @@ class LoginFragment : Fragment() {
             }
 
             override fun afterTextChanged(s: Editable) {
+                checkUseRememberPasswd()
                 loginViewModel.loginDataChanged(
                     userName?.text.toString(),
                     password?.text.toString()
                 )
+            }
+
+            private fun checkUseRememberPasswd() {
+                if (password?.text.toString() == passwdMd5){
+                    return
+                }
+                else{
+                    useRememberPasswd = false
+                    val passwdText: String =  password?.text.toString()
+                    passwdMd5 = Utils.md5Encoding(passwdText)
+                }
             }
         }
         userName?.addTextChangedListener(afterTextChangedListener)
@@ -109,7 +134,8 @@ class LoginFragment : Fragment() {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 loginViewModel.login(
                     userName?.text.toString(),
-                    password?.text.toString()
+                    password?.text.toString(),
+                    useRememberPasswd
                 )
             }
             false
@@ -119,12 +145,42 @@ class LoginFragment : Fragment() {
             loading?.visibility = View.VISIBLE
             loginViewModel.login(
                 userName?.text.toString(),
-                password?.text.toString()
+                password?.text.toString(),
+                useRememberPasswd
             )
         }
 
         configService.setOnClickListener {
             goSettings()
+        }
+        //记住密码
+        initRememberPasswd()
+    }
+
+    private fun initRememberPasswd() {
+        passwdMd5 = storage.getConfig().passwd
+        if (passwdMd5.isNotEmpty()) {
+            useRememberPasswd = true
+            password?.setText(passwdMd5)
+            userName?.setText(storage.getConfig().user)
+        }
+        //remember passwd
+        mRememberPasswd.isChecked = isCheck
+        //更新UI状态
+        mRememberPasswd.setOnClickListener {
+            Log.d(TAG, "setOnClickListener before : $isCheck")
+            val newCheck = !isCheck
+            val config = storage.getConfig()
+            config.rememberPasswd = newCheck
+            if (storage.saveConfig(config)){
+                Log.d(TAG, "setOnClickListener saveConfig newCheck : $newCheck")
+                mRememberPasswd.isChecked = newCheck
+                isCheck = newCheck
+            }
+            //保存失败
+            else{
+                Log.d(TAG, "onViewCreated: roll back  $isCheck")
+            }
         }
     }
 
@@ -134,11 +190,25 @@ class LoginFragment : Fragment() {
     }
 
     private fun updateUiWithUser(model: LoggedInUserView) {
+        savePasswd()
         toastLoginSuccess()
         //登录成功进入设备页面
         navController.navigate(R.id.deviceListFragment,
             null,
             NavOptions.Builder().setPopUpTo(R.id.deviceListFragment, true).build())
+    }
+
+    private fun savePasswd() {
+        val user = userName?.text.toString()
+        val config = storage.getConfig()
+        config.user = user
+        config.passwd = if (isCheck){
+            passwdMd5
+        }
+        else{
+            ""
+        }
+        storage.saveConfig(config)
     }
 
 

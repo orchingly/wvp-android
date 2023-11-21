@@ -83,7 +83,9 @@ open class SettingsFragment : Fragment() {
             Log.w(TAG, "saveConfig: ip text null")
             R.string.tip_ip_not_null.shortToast(requireContext())
         }
-        val config = SettingsConfig(eIp.text.toString(), port, tls.isSelected)
+        //防止记住密码丢失
+        val saved = storage.getConfig()
+        val config = SettingsConfig(eIp.text.toString(), port, tls.isSelected, saved.rememberPasswd, saved.passwd, saved.user)
         if (storage.saveConfig(config)){
             anim.setUpEvent()
             return true

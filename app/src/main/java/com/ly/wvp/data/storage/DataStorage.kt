@@ -20,6 +20,9 @@ class DataStorage(context: Context) {
         private const val IP = "ip"
         private const val PORT = "port"
         private const val TLS = "tls"
+        private const val REMEMBER_PASSWD = "remember_passwd"
+        private const val PASSWD = "passwd"
+        private const val USER = "user"
 
         private const val MULTI_PLAY_DEVICE_SELECTION = "multi_play_device_selection"
 
@@ -83,6 +86,9 @@ class DataStorage(context: Context) {
         ed.putString(IP, config.ip)
         ed.putInt(PORT, config.port)
         ed.putBoolean(TLS, config.enableTls)
+        ed.putBoolean(REMEMBER_PASSWD, config.rememberPasswd)
+        ed.putString(PASSWD, config.passwd)
+        ed.putString(USER, config.user)
         val success = ed.commit()
         //缓存
         if (success){
@@ -97,7 +103,11 @@ class DataStorage(context: Context) {
             return it
         }?: kotlin.run {
             Log.d(TAG, "getConfig: read config")
-            mConfig = SettingsConfig(sp.getString(IP, "") ?: "", sp.getInt(PORT, 0), sp.getBoolean(TLS, false))
+            mConfig = SettingsConfig(sp.getString(IP, "") ?: "",
+                sp.getInt(PORT, 0),
+                sp.getBoolean(TLS, false), sp.getBoolean(REMEMBER_PASSWD, false),
+                sp.getString(PASSWD, "")?: "",
+                sp.getString(USER, "")?: "")
             return mConfig as SettingsConfig
         }
     }

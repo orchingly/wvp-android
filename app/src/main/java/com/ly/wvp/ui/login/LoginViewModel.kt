@@ -46,15 +46,16 @@ class LoginViewModel() : ViewModel() {
         this.config = config
     }
 
-    fun login(username: String, password: String) {
+    fun login(username: String, password: String, useRememberPasswd: Boolean) {
 
         CoroutineScope(Dispatchers.IO).launch {
+            val passwd = if (useRememberPasswd) password else Utils.md5Encoding(password)
             val httpUrl = HttpConnectionClient.buildPublicHeader(config!!)
                 .addPathSegment(ServerUrl.API)
                 .addPathSegment(ServerUrl.USER)
                 .addPathSegment(ServerUrl.LOGIN)
                 .addQueryParameter(ServerUrl.PARAM_KEY_USER_NAME, username)
-                .addQueryParameter(ServerUrl.PARAM_KEY_PASSWD, Utils.md5Encoding(password))
+                .addQueryParameter(ServerUrl.PARAM_KEY_PASSWD, passwd)
                 .build()
 
 
