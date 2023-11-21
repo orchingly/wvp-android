@@ -14,8 +14,9 @@ import com.ly.wvp.util.JsonParseUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl
+import okhttp3.FormBody
 import okhttp3.Request
 import org.json.JSONException
 import org.json.JSONObject
@@ -25,9 +26,19 @@ class LiveDetailPlayerViewModel : ViewModel() {
 
     companion object{
         private const val TAG = "LiveDetailPlayerViewModel"
+        const val PTZ_UP = 1
+        const val PTZ_DOWN = 2
+        const val PTZ_LEFT = 3
+        const val PTZ_RIGHT = 4
+        const val PTZ_STOP = -1
+        const val PTZ_UP_STR = "up"
+        const val PTZ_DOWN_STR = "down"
+        const val PTZ_LEFT_STR = "left"
+        const val PTZ_RIGHT_STR = "right"
+        const val PTZ_MOVE_STOP = "stop"
+
     }
 
-    private val _mediaStream = MutableLiveData<String>()
 
     private var _netError = MutableLiveData<NetError>()
 
@@ -108,6 +119,67 @@ class LiveDetailPlayerViewModel : ViewModel() {
             }
 
         }
+    }
+
+    fun requestPtzMove(direction: Int, deviceId: String, channelId: String) {
+        val command = when (direction){
+            PTZ_LEFT -> PTZ_LEFT_STR
+            PTZ_UP -> PTZ_UP_STR
+            PTZ_RIGHT -> PTZ_RIGHT_STR
+            PTZ_DOWN -> PTZ_DOWN_STR
+            else -> PTZ_MOVE_STOP
+        }
+        if (command.isEmpty()){
+            Log.w(TAG, "requestPtzMove: invalid command $direction")
+            return
+        }
+        CoroutineScope(IO).launch {
+            try {
+                //stop命令延迟500,更好的移动效果
+                if (command == PTZ_MOVE_STOP){
+                    delay(300)
+                }
+                executePtzMove(command, deviceId, channelId)
+            }
+            catch (e: IOException){
+                Log.w(TAG, "requestPtzMove: error ${e.message}" )
+                _netError.postValue( NetError(NetError.APP_ERROR, e.message?:"IOException"))
+            }
+            catch (e: IllegalStateException){
+                _netError.postValue(NetError(NetError.APP_ERROR, e.message?:"IllegalStateException"))
+            }
+            catch (e: Exception){
+                _netError.postValue(NetError(NetError.INTERNET_INVALID, e.message?:"Exception"))
+            }
+        }
+    }
+
+    //api/ptz/control/34020000001320000002/34020000001320000002?command=up&horizonSpeed=30&verticalSpeed=30&zoomSpeed=30
+    //api/ptz/control/34020000001320000002/34020000001320000002?command=stop&horizonSpeed=30&verticalSpeed=30&zoomSpeed=30
+    //api/ptz/control/34020000001320000002/34020000001320000002?command=left&horizonSpeed=30&verticalSpeed=30&zoomSpeed=30
+    //api/ptz/control/34020000001320000002/34020000001320000002?command=stop&horizonSpeed=30&verticalSpeed=30&zoomSpeed=30
+    //api/ptz/control/34020000001320000002/34020000001320000002?command=right&horizonSpeed=30&verticalSpeed=30&zoomSpeed=30
+    //api/ptz/control/34020000001320000002/34020000001320000002?command=stop&horizonSpeed=30&verticalSpeed=30&zoomSpeed=30
+    //api/ptz/control/34020000001320000002/34020000001320000002?command=down&horizonSpeed=30&verticalSpeed=30&zoomSpeed=30
+    //api/ptz/control/34020000001320000002/34020000001320000002?command=stop&horizonSpeed=30&verticalSpeed=30&zoomSpeed=30
+    private fun executePtzMove(command: String, deviceId: String, channelId: String){
+
+        val httpUrl = HttpConnectionClient.buildPublicHeader(config!!)
+            .addPathSegments(ServerUrl.PTZ_CONTROL)
+            .addPathSegment(deviceId)
+            .addPathSegment(channelId)
+            .addQueryParameter("command", command)
+            .addQueryParameter("horizonSpeed", "100")
+            .addQueryParameter("verticalSpeed", "100")
+            .addQueryParameter("zoomSpeed", "100")
+            .build()
+        val body = FormBody.Builder().build()
+        val request = Request.Builder()
+            .url(httpUrl)
+            .post(body)
+            .build()
+        Log.d(TAG, "executePtzMove: ${httpUrl.toUrl()}")
+        HttpConnectionClient.request(request)
     }
 
 

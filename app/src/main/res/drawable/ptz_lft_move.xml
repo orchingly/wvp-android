@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+  <path
+      android:pathData="M32.932,5.474Q38.182,2.217 38.286,8.547L38.766,38.089Q38.869,44.42 33.515,41.346L8.528,27.006Q3.173,23.933 8.425,20.676Z"
+      android:fillColor="@color/ptz_btn_color"/>
+</vector>

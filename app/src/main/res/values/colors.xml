@@ -39,4 +39,7 @@
     <color name="app_base_bg">#FAFAFA</color>
     <color name="app_base_item_bg">#FFFFFF</color>
     <color name="app_base_item_bg_stroke">#DCDCDC</color>
+
+    <color name="ptz_btn_color">#D8D8D8</color>
+    <color name="ptz_btn_color_p">#808080</color>
 </resources>

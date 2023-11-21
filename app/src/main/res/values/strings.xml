@@ -58,6 +58,14 @@
 
     <string name="device_selection_failed">选项操作失败</string>
 
+
+    <!--device control-->
+    <string name="ptz_up">上移</string>
+    <string name="ptz_down">下移</string>
+    <string name="ptz_left">左移</string>
+    <string name="ptz_right">右移</string>
+    <string name="ptz_move_control">云台控制</string>
+
     <!--日历组件-->
     <string name="cv_app_name">CalendarView</string>
     <string-array name="lunar_first_of_month">

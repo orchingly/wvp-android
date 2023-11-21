@@ -1,10 +1,14 @@
 package com.ly.wvp.device.play
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent.ACTION_DOWN
+import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
@@ -14,6 +18,11 @@ import androidx.navigation.fragment.findNavController
 import com.ly.wvp.R
 import com.ly.wvp.data.model.StreamContent
 import com.ly.wvp.data.storage.DataStorage
+import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_DOWN
+import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_LEFT
+import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_RIGHT
+import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_STOP
+import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_UP
 import com.ly.wvp.util.shortToast
 import com.shuyu.gsyvideoplayer.GSYVideoManager
 import com.shuyu.gsyvideoplayer.builder.GSYVideoOptionBuilder
@@ -47,6 +56,14 @@ class LiveDetailPlayerFragment : Fragment() {
     private lateinit var mActionBack: ImageView
 
     private lateinit var mTitle: TextView
+
+    /**
+     * 上下左右,方向控制键
+     */
+    private lateinit var mPtzBtnUp: ImageButton
+    private lateinit var mPtzBtnDown: ImageButton
+    private lateinit var mPtzBtnLeft: ImageButton
+    private lateinit var mPtzBtnRight: ImageButton
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -98,6 +115,37 @@ class LiveDetailPlayerFragment : Fragment() {
 
         mActionBack.setOnClickListener {
             findNavController().navigateUp()
+        }
+
+        initPtzEvent(view)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun initPtzEvent(parent: View) {
+        mPtzBtnUp = parent.findViewById(R.id.ptz_btn_up)
+        mPtzBtnDown = parent.findViewById(R.id.ptz_btn_down)
+        mPtzBtnLeft = parent.findViewById(R.id.ptz_btn_left)
+        mPtzBtnRight = parent.findViewById(R.id.ptz_btn_right)
+
+        setOnTouchEvent(mPtzBtnUp, PTZ_UP)
+        setOnTouchEvent(mPtzBtnDown, PTZ_DOWN)
+        setOnTouchEvent(mPtzBtnLeft, PTZ_LEFT)
+        setOnTouchEvent(mPtzBtnRight, PTZ_RIGHT)
+    }
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setOnTouchEvent(btn: ImageButton, direction: Int){
+        btn.setOnTouchListener { v, event ->
+            return@setOnTouchListener  when (event.action){
+                ACTION_DOWN -> {
+                    viewModel.requestPtzMove(direction, deviceId, channelId)
+                    false
+                }
+                ACTION_UP -> {
+                    viewModel.requestPtzMove(PTZ_STOP, deviceId, channelId)
+                    false
+                }
+                else -> false
+            }
         }
     }
 

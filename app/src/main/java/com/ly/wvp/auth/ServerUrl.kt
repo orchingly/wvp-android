@@ -47,5 +47,7 @@ class ServerUrl {
 
         //快照
         const val SNAP = "snap"
+
+        const val PTZ_CONTROL = "api/ptz/control"
     }
 }
