@@ -8,7 +8,9 @@ import com.ly.wvp.auth.HttpConnectionClient
 import com.ly.wvp.auth.NetError
 import com.ly.wvp.auth.ResponseBody
 import com.ly.wvp.auth.ResponseBody.Companion.APP
+import com.ly.wvp.auth.ResponseBody.Companion.CODE
 import com.ly.wvp.auth.ResponseBody.Companion.DATA
+import com.ly.wvp.auth.ResponseBody.Companion.MSG
 import com.ly.wvp.auth.ResponseBody.Companion.STREAM
 import com.ly.wvp.auth.ServerUrl
 import com.ly.wvp.calendar.Calendar
@@ -322,8 +324,14 @@ class CloudRecordDetailViewModel : ViewModel() {
             this.body?.let {
                 try {
                     val jsonObj = JSONObject(it.string())
-                    val code = jsonObj.getInt(ResponseBody.CODE)
-                    val msg = jsonObj.getString(ResponseBody.MSG)
+                    val code = jsonObj.getInt(CODE)
+                    val msg = jsonObj.getString(MSG)
+                    //404
+                    val notFound = checkNotFound(jsonObj)
+                    if (notFound){
+                        Log.d(TAG, "loadActionList: 404 not found loadActionList")
+                        return ArrayList()
+                    }
                     when (code){
                         0 -> {
                             return JsonParseUtil.parseRecordActionList(jsonObj.getJSONArray(DATA))
@@ -344,5 +352,17 @@ class CloudRecordDetailViewModel : ViewModel() {
             }
         }
         return ArrayList()
+    }
+
+    private fun checkNotFound(jsonObj: JSONObject): Boolean {
+        val obj = jsonObj.get(DATA)
+        //正常返回JsonArray,异常返回JSONObject包含状态码
+        if (obj is JSONObject){
+            val status = obj.getInt("status")
+            val msg = "Action list ${obj.getString("error")}"
+            _netError.postValue(NetError(status,  msg))
+            return true
+        }
+        return false
     }
 }
