@@ -38,27 +38,30 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
 
     private val mFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private val mFileTimeFormat = SimpleDateFormat("HH:mm:ss", Locale.CHINA)
+
+
     fun setPlayListener(playListener: PlayListener){
         this.playListener = playListener
     }
 
     fun updateRecordList(record: List<CloudRecord>){
         recordList.clear()
-        recordList.addAll(reformatCloudRecordIfNeeded(record))
+        recordList.addAll(record)
         clickPos = -1
     }
 
-    private fun reformatCloudRecordIfNeeded(record: List<CloudRecord>): Collection<CloudRecord> {
-        val formatRecord = ArrayList<CloudRecord>()
-        record.forEach {
-            val fileName = formatFileNameIfNeeded(it.recordFile)
-            //时间戳格式
-            //onRecordPlay播放url用时间戳来区分新版旧版的格式
-            val format = if (it.recordFile.contains(":")) TIME_FORMAT_VERSION_1 else TIME_FORMAT_VERSION_2
-            formatRecord.add(CloudRecord(it.app, it.stream, it.calendar, fileName, it.eventList, it.duration, format))
-        }
-       return formatRecord
-    }
+//    private fun reformatCloudRecordIfNeeded(record: List<CloudRecord>): Collection<CloudRecord> {
+//        val formatRecord = ArrayList<CloudRecord>()
+//        record.forEach {
+//            val fileName = formatFileNameIfNeeded(it.recordFile)
+//            //时间戳格式
+//            //onRecordPlay播放url用时间戳来区分新版旧版的格式
+//            val format = if (it.recordFile.contains(":")) TIME_FORMAT_VERSION_1 else TIME_FORMAT_VERSION_2
+//            formatRecord.add(CloudRecord(it.app, it.stream, it.calendar, fileName, it.eventList, it.duration, format))
+//        }
+//       return formatRecord
+//    }
 
 
     /**
@@ -245,19 +248,21 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
     }
 
     override fun onBindViewHolder(holder: FileListHolder, position: Int) {
+        val cloudRecord = recordList[position]
         val fileName = recordList[position].recordFile
-        val fileSp = fileName.split("-")
+//        val fileSp = fileName.split("-")
         //14:42:35-14:42:48-13517.mp4
-        val timeSuffix = fileSp[2]
-        val index = timeSuffix.indexOf(".", 0, true)
-        val timeStamp = if (index > -1){
-            timeSuffix.substring(0, index)
-        } else "0"
+//        val timeSuffix = fileSp[2]
+//        val index = timeSuffix.indexOf(".", 0, true)
+//        val timeStamp = if (index > -1){
+//            timeSuffix.substring(0, index)
+//        } else "0"
 
-        val timeSecond = convertToTime(timeStamp.toInt())
+        val timeSecond = convertToTime(cloudRecord.recordItem.timeLen)
         //起始时间
-        val from = fileSp[0]
-        val to = fileSp[1]
+
+        val from = mFileTimeFormat.format(cloudRecord.recordItem.startTime)
+        val to = mFileTimeFormat.format(cloudRecord.recordItem.endTime)
 
         holder.time.text = timeSecond
         holder.recordTimeStart.text = from
@@ -343,7 +348,7 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
         }
     }
 
-    private fun convertToTime(timeStamp: Int): String{
+    private fun convertToTime(timeStamp: Long): String{
         val t = timeStamp / 1000
         //超过1分钟
         return if (t >= 60) {

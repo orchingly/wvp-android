@@ -16,6 +16,7 @@ import com.ly.wvp.auth.ResponseBody.Companion.STREAM
 import com.ly.wvp.auth.ResponseBody.Companion.STREAM_IP
 import com.ly.wvp.auth.ResponseBody.Companion.TIME
 import com.ly.wvp.calendar.Calendar
+import com.ly.wvp.data.model.CloudRecordItem
 import com.ly.wvp.data.model.Device
 import com.ly.wvp.data.model.DeviceChanel
 import com.ly.wvp.data.model.MediaServerItem
@@ -71,7 +72,7 @@ object JsonParseUtil {
             channel.setDeviceId(channelObj.getString("deviceId"))
             channel.setName(channelObj.getString("name"))
             channel.setHasAudio(channelObj.getBoolean("hasAudio"))
-            channel.setPTZType(channelObj.getInt("PTZType"))
+            channel.setPTZType(channelObj.getInt("ptzType"))
             try {
                 channel.setManufacture(channelObj.getString("manufacture"))
             }
@@ -182,13 +183,39 @@ object JsonParseUtil {
     }
 
 
-    fun parseRecordFileList(jsonObj: JSONObject): ArrayList<String>{
+    fun parseRecordFileList(jsonObj: JSONObject): ArrayList<CloudRecordItem>{
         val jsonArray = jsonObj.getJSONArray(LIST)
-        val fileList = ArrayList<String>()
+        val recordList = ArrayList<CloudRecordItem>()
         for (i in 0 until jsonArray.length()){
-            fileList.add(jsonArray.getString(i))
+            //TODO: jsonArray.getString(i) -> object
+            //            {
+            //                "id": 709,
+            //                "app": "rtp",
+            //                "stream": "34020000001320000002_34020000001320000002",
+            //                "callId": "0b334b0f7a11b0e9f7f24d0a5c9e008d@0.0.0.0",
+            //                "startTime": 1715615842000,
+            //                "endTime": 1715616142000,
+            //                "mediaServerId": "1010101010100",
+            //                "fileName": "23-57-22-4.mp4",
+            //                "filePath": "/data/ipcamera/ZLMedia/www/record/rtp/34020000001320000002_34020000001320000002/2024-05-13/23-57-22-4.mp4",
+            //                "folder": "/data/ipcamera/ZLMedia/www/record/rtp/34020000001320000002_34020000001320000002/",
+            //                "collect": false,
+            //                "reserve": null,
+            //                "fileSize": 3248200,
+            //                "timeLen": 300000
+            //            },
+            val cloudRecordItemObj = jsonArray.getJSONObject(i)
+            val recordItem = CloudRecordItem()
+            recordItem.id = cloudRecordItemObj.getInt("id")
+            recordItem.app = cloudRecordItemObj.getString("app")
+            recordItem.stream = cloudRecordItemObj.getString("stream")
+            recordItem.startTime = cloudRecordItemObj.getLong("startTime")
+            recordItem.endTime = cloudRecordItemObj.getLong("endTime")
+            recordItem.fileName = cloudRecordItemObj.getString("fileName")
+            recordItem.timeLen = cloudRecordItemObj.getLong("timeLen")
+            recordList.add(recordItem)
         }
-        return fileList
+        return recordList
     }
 
     fun parseRecordActionList(jsonArray: JSONArray): ArrayList<StreamDetectionItem>{

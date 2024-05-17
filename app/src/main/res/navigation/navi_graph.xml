@@ -55,18 +55,6 @@
         <argument
             android:name="stream"
             app:argType="string" />
-        <argument
-            android:name="server"
-            app:argType="string" />
-        <argument
-            android:name="serverIp"
-            app:argType="string" />
-        <argument
-            android:name="httpPort"
-            app:argType="integer" />
-        <argument
-            android:name="httpsPort"
-            app:argType="integer" />
     </fragment>
     <fragment
         android:id="@+id/multiPlayFragment"

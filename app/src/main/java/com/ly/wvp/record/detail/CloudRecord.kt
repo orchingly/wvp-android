@@ -1,6 +1,7 @@
 package com.ly.wvp.record.detail
 
 import com.ly.wvp.calendar.Calendar
+import com.ly.wvp.data.model.CloudRecordItem
 import com.ly.wvp.data.model.StreamDetectionItem
 import java.time.Duration
 
@@ -15,6 +16,10 @@ data class CloudRecord(val app: String,
                        val calendar: Calendar,
                        val recordFile: String,
                        var eventList: ArrayList<DetectionEvent> = ArrayList(),
-                        var duration: Duration = Duration.ZERO,
-                        var format: String = TIME_FORMAT_VERSION_2)
+                       var duration: Duration = Duration.ZERO,
+                       var format: String = TIME_FORMAT_VERSION_2,
+                       /**
+                        * 服务器返回的原始录像信息
+                        */
+                       var recordItem: CloudRecordItem)
 

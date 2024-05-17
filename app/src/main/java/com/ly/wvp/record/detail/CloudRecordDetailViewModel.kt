@@ -14,12 +14,14 @@ import com.ly.wvp.auth.ResponseBody.Companion.MSG
 import com.ly.wvp.auth.ResponseBody.Companion.STREAM
 import com.ly.wvp.auth.ServerUrl
 import com.ly.wvp.calendar.Calendar
+import com.ly.wvp.data.model.CloudRecordItem
 import com.ly.wvp.data.model.StreamDetectionItem
 import com.ly.wvp.data.storage.SettingsConfig
 import com.ly.wvp.util.JsonParseUtil
-import com.ly.wvp.util.toString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import okhttp3.Request
 import org.json.JSONException
@@ -117,6 +119,9 @@ class CloudRecordDetailViewModel : ViewModel() {
 
     private var _netError = MutableLiveData<NetError>()
 
+    private val _playUrlFlow = MutableSharedFlow<String>(extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
     private var config: SettingsConfig? = null
 
     fun getRecordCalendar(): LiveData<List<Calendar>> =  _recordCalendar
@@ -131,7 +136,7 @@ class CloudRecordDetailViewModel : ViewModel() {
         this.config = config
     }
 
-    fun requestRecordFileList(calendar:Calendar, app: String, stream: String, mediaServer: String){
+    fun requestRecordFileList(calendar:Calendar, app: String, stream: String){
 
         val yy = calendar.year.toString()
         val mm = if (calendar.month < 10) "0${calendar.month}" else calendar.month.toString()
@@ -141,11 +146,11 @@ class CloudRecordDetailViewModel : ViewModel() {
         val endTime = "$yy-$mm-$dd 23:59:59"
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val recordInfo = loadRecordFileList(app, stream, mediaServer, startTime, endTime)
+                val cloudRecordList = loadRecordFileList(app, stream, startTime, endTime)
                 launch(Dispatchers.Main){
                     val list = ArrayList<CloudRecord>()
-                    recordInfo.forEach{
-                        list.add(CloudRecord(app, stream, calendar, it))
+                    cloudRecordList.forEach{
+                        list.add(CloudRecord(app, stream, calendar, it.fileName ?: "", recordItem = it))
                     }
                     _recordFileList.value = list
                 }
@@ -164,15 +169,16 @@ class CloudRecordDetailViewModel : ViewModel() {
 
     }
 
-    private fun loadRecordFileList(app: String, stream: String, mediaServer: String, startTime: String, endTime: String): ArrayList<String>{
+    private fun loadRecordFileList(app: String, stream: String, startTime: String, endTime: String): ArrayList<CloudRecordItem>{
         //当天的记录一页加载完
+        //原始请求url:http://192.168.200.2:18080/api/cloud/record/list?app=rtp&stream=34020000001320000002_34020000001320000002&startTime=2024-05-13 00:00:00&endTime=2024-05-13 23:59:59&page=1&count=1000000
         val page = "1"
         val count = "1000000"
         val httpUrl = HttpConnectionClient.buildPublicHeader(config!!)
-            .addPathSegment(ServerUrl.CLOUD_PROXY)
-            .addPathSegment(mediaServer)
-            .addPathSegments(ServerUrl.API_RECORD)
-            .addPathSegment(ServerUrl.FILE)
+            .addPathSegments(ServerUrl.API_CLOUD_RECORD)
+//            .addPathSegment(mediaServer)
+//            .addPathSegments(ServerUrl.DATE)
+//            .addPathSegment(ServerUrl.FILE)
             .addPathSegment(ServerUrl.LIST)
             .addQueryParameter(APP, app)
             .addQueryParameter(STREAM, stream)
@@ -213,10 +219,10 @@ class CloudRecordDetailViewModel : ViewModel() {
         return ArrayList()
     }
 
-    fun requestRecordCalendar(app: String, stream: String, mediaServer: String){
+    fun requestRecordCalendar(app: String, stream: String){
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val recordInfo = loadRecordCalendar(app, stream, mediaServer)
+                val recordInfo = loadRecordCalendar(app, stream)
                 launch(Dispatchers.Main){
                     _recordCalendar.value = recordInfo
                 }
@@ -234,15 +240,22 @@ class CloudRecordDetailViewModel : ViewModel() {
         }
     }
 
-    private fun loadRecordCalendar(app: String, stream: String, mediaServer: String): ArrayList<Calendar>{
+    /**
+     * 查询有录像记录的日期
+     */
+    private fun loadRecordCalendar(app: String, stream: String): ArrayList<Calendar>{
+        //原始请求url: //new api: http://192.168.200.2:18080/api/cloud/record/date/list?app=rtp&stream=34020000001320000002_34020000001320000002&year=2024&month=5
         val httpUrl = HttpConnectionClient.buildPublicHeader(config!!)
-            .addPathSegment(ServerUrl.CLOUD_PROXY)
-            .addPathSegment(mediaServer)
-            .addPathSegments(ServerUrl.API_RECORD)
+            .addPathSegments(ServerUrl.API_CLOUD_RECORD)
+//            .addPathSegment(mediaServer)
+//            .addPathSegments(ServerUrl.API_RECORD)
             .addPathSegment(ServerUrl.DATE)
             .addPathSegment(ServerUrl.LIST)
             .addQueryParameter(APP, app)
             .addQueryParameter(STREAM, stream)
+            //TODO:按月查询
+            .addQueryParameter("year", "2024")
+            .addQueryParameter("month", "5")
             .build()
         val request = Request.Builder()
             .url(httpUrl)
@@ -251,6 +264,9 @@ class CloudRecordDetailViewModel : ViewModel() {
         HttpConnectionClient.request(request).run {
             this.body?.let {
                 try {
+                    /*
+                    {"code":0,"msg":"成功","data":["2024-05-14","2024-05-12","2024-05-13"]}
+                     */
                     val jsonObj = JSONObject(it.string())
                     val code = jsonObj.getInt(ResponseBody.CODE)
                     val msg = jsonObj.getString(ResponseBody.MSG)
@@ -365,4 +381,23 @@ class CloudRecordDetailViewModel : ViewModel() {
         }
         return false
     }
+
+    private fun getPlayUrl(record: CloudRecord) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                _playUrlFlow.emit(requestPlayUrl(record.recordItem.id))
+            } catch (e: Exception) {
+                _playUrlFlow.emit(e.message ?: "")
+            }
+        }
+    }
+
+    private fun requestPlayUrl(id: Int): String{
+
+        //http://192.168.200.2:18080/api/cloud/record/play/path?recordId=709
+        return ""
+
+    }
+
+
 }

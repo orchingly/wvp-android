@@ -8,14 +8,18 @@ import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.ly.wvp.R
+import com.ly.wvp.auth.ServerUrl
 import com.ly.wvp.data.model.StreamContent
 import com.ly.wvp.data.storage.DataStorage
 import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_DOWN
@@ -23,6 +27,8 @@ import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_LEFT
 import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_RIGHT
 import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_STOP
 import com.ly.wvp.device.play.LiveDetailPlayerViewModel.Companion.PTZ_UP
+import com.ly.wvp.record.CloudRecordAdapter
+import com.ly.wvp.record.detail.CloudRecordDetailFragmentArgs
 import com.ly.wvp.util.shortToast
 import com.shuyu.gsyvideoplayer.GSYVideoManager
 import com.shuyu.gsyvideoplayer.builder.GSYVideoOptionBuilder
@@ -47,6 +53,7 @@ class LiveDetailPlayerFragment : Fragment() {
 
     private lateinit var deviceId: String
     private lateinit var channelId: String
+    private lateinit var mStreamId: String
 
     private lateinit var liveInfo: TextView
     private lateinit var storage: DataStorage
@@ -64,6 +71,8 @@ class LiveDetailPlayerFragment : Fragment() {
     private lateinit var mPtzBtnDown: ImageButton
     private lateinit var mPtzBtnLeft: ImageButton
     private lateinit var mPtzBtnRight: ImageButton
+
+    private lateinit var mBtnCloudRecord: Button
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -86,9 +95,15 @@ class LiveDetailPlayerFragment : Fragment() {
         //视频流请求参数
         deviceId = LiveDetailPlayerFragmentArgs.fromBundle(requireArguments()).deviceId
         channelId = LiveDetailPlayerFragmentArgs.fromBundle(requireArguments()).channelId
+        mStreamId = deviceId+"_"+channelId
         mTitle.text = channelId
         liveInfo.text = channelId
         viewModel.requestStream(deviceId, channelId)
+        mBtnCloudRecord = view.findViewById(R.id.cloud_record)
+
+        mBtnCloudRecord.setOnClickListener {
+            openRecordDetail()
+        }
 
         viewModel.getStream().observe(viewLifecycleOwner){
 //            detailPlayer.hideFailed()
@@ -322,6 +337,21 @@ class LiveDetailPlayerFragment : Fragment() {
         }
 //        orientationUtils.releaseListener()
         GSYVideoManager.releaseAllVideos()
+    }
+
+    /**
+     * 打开云端录像详情
+     */
+    private fun openRecordDetail() {
+        //new api: http://192.168.200.2:18080/api/cloud/record/date/list?app=rtp&stream=34020000001320000002_34020000001320000002&year=2024&month=5
+        //http://192.168.200.2:18080/api/cloud/record/list?app=rtp&stream=34020000001320000002_34020000001320000002&startTime=2024-05-13 00:00:00&endTime=2024-05-13 23:59:59&page=1&count=1000000
+        findNavController().navigate(R.id.cloudRecordDetailFragment,
+            CloudRecordDetailFragmentArgs(ServerUrl.APP,
+                mStreamId
+            ).toBundle(),
+            //cloudRecordListFragment及以上全部出栈
+            NavOptions.Builder().setPopUpTo(R.id.cloudRecordDetailFragment, true).build()
+        )
     }
 
 }

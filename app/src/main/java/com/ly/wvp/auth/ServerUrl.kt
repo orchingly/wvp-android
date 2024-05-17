@@ -12,6 +12,12 @@ class ServerUrl {
         const val PARAM_KEY_USER_NAME = "username"
         const val PARAM_KEY_PASSWD = "password"
 
+        /**
+         * 流应用app:rtp
+         * 点播触发的云端录像app都为rtp,拉流代理app(应用)也设置为rtp
+         */
+        const val APP = "rtp"
+
 
         const val API_DEVICE = "api/v1/device"
 
@@ -49,5 +55,11 @@ class ServerUrl {
         const val SNAP = "snap"
 
         const val PTZ_CONTROL = "api/ptz/control"
+
+        /**
+         * 云端录像接口
+         * @RequestMapping("/api/cloud/record")
+         */
+        const val API_CLOUD_RECORD = "api/cloud/record"
     }
 }

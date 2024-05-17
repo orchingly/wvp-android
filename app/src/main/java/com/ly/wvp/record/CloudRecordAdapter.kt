@@ -42,13 +42,14 @@ class CloudRecordAdapter: Adapter<CloudRecordAdapter.RecordHolder>() {
     }
 
     private fun openRecordDetail(nav: NavController, holder: RecordHolder) {
+        //new api: http://192.168.200.2:18080/api/cloud/record/date/list?app=rtp&stream=34020000001320000002_34020000001320000002&year=2024&month=5
         nav.navigate(R.id.cloudRecordDetailFragment,
             CloudRecordDetailFragmentArgs(holder.app.text.toString(),
                 holder.stream.text.toString(),
-                mediaServer.id!!,
-                mediaServer.streamIp!!,
-                mediaServer.httpPort,
-                mediaServer.httpSSlPort
+//                mediaServer.id!!,
+//                mediaServer.streamIp!!,
+//                mediaServer.httpPort,
+//                mediaServer.httpSSlPort
             ).toBundle(),
             //cloudRecordListFragment及以上全部出栈
             NavOptions.Builder().setPopUpTo(R.id.cloudRecordDetailFragment, true).build()

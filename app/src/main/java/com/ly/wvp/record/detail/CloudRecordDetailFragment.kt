@@ -109,24 +109,20 @@ open class CloudRecordDetailFragment() : Fragment() {
 
         val app = CloudRecordDetailFragmentArgs.fromBundle(requireArguments()).app
         val stream = CloudRecordDetailFragmentArgs.fromBundle(requireArguments()).stream
-        val server = CloudRecordDetailFragmentArgs.fromBundle(requireArguments()).server
-        val ip = CloudRecordDetailFragmentArgs.fromBundle(requireArguments()).serverIp
-        val port = CloudRecordDetailFragmentArgs.fromBundle(requireArguments()).httpPort
-        val sslPort = CloudRecordDetailFragmentArgs.fromBundle(requireArguments()).httpsPort
         val enableTls = storage.getConfig().enableTls
 
         viewModel.getRecordCalendar().observe(viewLifecycleOwner){
             //将有录像的日期标记出来
             showRecordDateToCalendar(it)
             //加载当天的录像文件记录
-            loadRecordListOfCurrentDay(app, stream, server)
+            loadRecordListOfCurrentDay(app, stream)
         }
         viewModel.getRecordFileList().observe(viewLifecycleOwner){
             Log.d(TAG, "onViewCreated: getRecordFileList changed")
             handleRecordList(it)
             if (it.isNotEmpty()){
                 val record = it.first()
-                viewModel.requestAction(record.calendar, record.app, record.stream)
+//                viewModel.requestAction(record.calendar, record.app, record.stream)
             }
         }
         viewModel.getRecordActionList().observe(viewLifecycleOwner){
@@ -137,7 +133,7 @@ open class CloudRecordDetailFragment() : Fragment() {
             handleError(it)
         }
 
-        viewModel.requestRecordCalendar(app, stream, server)
+        viewModel.requestRecordCalendar(app, stream)
         calendarView.setOnCalendarSelectListener(object : CalendarView.OnCalendarSelectListener {
             override fun onCalendarOutOfRange(calendar: Calendar?) {
 
@@ -153,7 +149,7 @@ open class CloudRecordDetailFragment() : Fragment() {
                     return
                 }
                 //日期切换重新请求记录
-                viewModel.requestRecordFileList(calendar, app, stream, server)
+                viewModel.requestRecordFileList(calendar, app, stream)
 
             }
         })
@@ -185,12 +181,14 @@ open class CloudRecordDetailFragment() : Fragment() {
             calendarView.scrollToCalendar(year, month, day, true)
         }
 
+
         initVideoPlayer()
         fileAdapter.setPlayListener(object : RecordFileListAdapter.PlayListener{
             override fun onRecordPlay(record: CloudRecord) {
-                val url = buildUrl(record, ip, port, sslPort, enableTls)
-                Log.d(TAG, "onRecordPlay: play url = $url")
-                buildGSYVideoOptionBuilder(url).build(player)
+                //TODO:播放URL从服务器请求
+//                val url = buildUrl(record, ip, port, sslPort, enableTls)
+                Log.d(TAG, "onRecordPlay: play url = ")
+                buildGSYVideoOptionBuilder("").build(player)
 
                 //刷新进度条事件
                 refreshEventOnProgressBar(record)
@@ -286,15 +284,14 @@ open class CloudRecordDetailFragment() : Fragment() {
 
     private fun loadRecordListOfCurrentDay(
         app: String,
-        stream: String,
-        server: String
+        stream: String
     ) {
         val today = calendarView.selectedCalendar
         if (today.scheme.isNullOrEmpty()){
             Log.w(TAG, "showRecordDateToCalendar: no record today")
             return
         }
-        viewModel.requestRecordFileList(today, app, stream, server)
+        viewModel.requestRecordFileList(today, app, stream)
     }
 
     private fun exitFullWindow(): Boolean {
