@@ -61,5 +61,16 @@ class ServerUrl {
          * @RequestMapping("/api/cloud/record")
          */
         const val API_CLOUD_RECORD = "api/cloud/record"
+
+        /**
+         * 云端录像请求播放路径的url字段
+         */
+        const val PLAY_PATH = "play/path"
+
+        /**
+         * 云端录像请求播放路径的参数
+         */
+        const val RECORD_ID = "recordId"
+
     }
 }

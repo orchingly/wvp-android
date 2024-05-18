@@ -21,6 +21,7 @@ import com.ly.wvp.util.JsonParseUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import okhttp3.Request
@@ -119,8 +120,14 @@ class CloudRecordDetailViewModel : ViewModel() {
 
     private var _netError = MutableLiveData<NetError>()
 
+    /**
+     * 请求云端录像播放url的数据流，每次点击列表出发请求，收到返回的url后将其写入Flow
+     * 外部监听FLOW,有数据就开始播放， 策略：DROP_OLDEST
+     */
     private val _playUrlFlow = MutableSharedFlow<String>(extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    fun getPlayUrlFlow(): Flow<String> = _playUrlFlow
 
     private var config: SettingsConfig? = null
 
@@ -382,21 +389,59 @@ class CloudRecordDetailViewModel : ViewModel() {
         return false
     }
 
-    private fun getPlayUrl(record: CloudRecord) {
+    fun getPlayUrl(record: CloudRecord) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 _playUrlFlow.emit(requestPlayUrl(record.recordItem.id))
             } catch (e: Exception) {
                 _playUrlFlow.emit(e.message ?: "")
+                _netError.postValue(NetError(NetError.OTHER_EXCEPTION, e.message ?: ""))
             }
         }
     }
 
     private fun requestPlayUrl(id: Int): String{
-
         //http://192.168.200.2:18080/api/cloud/record/play/path?recordId=709
+        val httpUrl = HttpConnectionClient.buildPublicHeader(config!!)
+            .addPathSegments(ServerUrl.API_CLOUD_RECORD)
+            .addPathSegments(ServerUrl.PLAY_PATH)
+            .addQueryParameter(ServerUrl.RECORD_ID, id.toString())
+            .build()
+        val request = Request.Builder()
+            .url(httpUrl)
+            .get()
+            .build()
+        HttpConnectionClient.request(request).run {
+            this.body?.let {
+                try {
+                    val jsonObj = JSONObject(it.string())
+                    val code = jsonObj.getInt(CODE)
+                    val msg = jsonObj.getString(MSG)
+                    when (code) {
+                        0 -> {
+                            val pathObj = jsonObj.getJSONObject("data")
+                            val httpPath = pathObj.getString("httpPath")
+                            val httpsPath = pathObj.getString("httpsPath")
+                            return if (config!!.enableTls) {
+                                httpsPath
+                            } else httpPath
+                        }
+                        else -> {
+                            _netError.postValue(NetError(code, msg))
+                        }
+                    }
+                }
+                catch (e: JSONException){
+                    _netError.postValue(NetError(NetError.JSON_ERROR, e.message ?: "JSONException"))
+                }
+                catch (e: Exception){
+                    _netError.postValue(NetError(NetError.OTHER_EXCEPTION, e.message ?: "Exception"))
+                }
+            } ?: kotlin.run {
+                _netError.postValue(NetError(NetError.OTHER_EXCEPTION, "Http response body is null"))
+            }
+        }
         return ""
-
     }
 
 

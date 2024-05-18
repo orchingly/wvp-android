@@ -183,19 +183,28 @@ open class CloudRecordDetailFragment() : Fragment() {
 
 
         initVideoPlayer()
+
+        //设置云端录像列表监听事件回调
         fileAdapter.setPlayListener(object : RecordFileListAdapter.PlayListener{
             override fun onRecordPlay(record: CloudRecord) {
-                //TODO:播放URL从服务器请求
-//                val url = buildUrl(record, ip, port, sslPort, enableTls)
-                Log.d(TAG, "onRecordPlay: play url = ")
-                buildGSYVideoOptionBuilder("").build(player)
-
-                //刷新进度条事件
-                refreshEventOnProgressBar(record)
-
-                player.startPlayLogic()
+                //点击事件回调，从服务器请求播放路径
+                viewModel.getPlayUrl(record)
             }
         })
+
+        //服务器返回播放url之后开始播放
+        CoroutineScope(IO).launch {
+            viewModel.getPlayUrlFlow().collect{
+                Log.d(TAG, "onRecordPlay: play url = $it")
+                launch(Main){
+                    buildGSYVideoOptionBuilder(it).build(player)
+                    //刷新进度条事件
+//            refreshEventOnProgressBar(record)
+                    player.startPlayLogic()
+                }
+            }
+        }
+
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object :
             OnBackPressedCallback(true) {
