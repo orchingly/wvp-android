@@ -15,7 +15,11 @@ import com.ly.wvp.auth.ResponseBody.Companion.STREAM
 import com.ly.wvp.auth.ServerUrl
 import com.ly.wvp.calendar.Calendar
 import com.ly.wvp.data.model.CloudRecordItem
-import com.ly.wvp.data.model.StreamDetectionItem
+import com.ly.wvp.data.model.AlarmInfo
+import com.ly.wvp.data.model.AlarmInfo.Companion.ACT_START
+import com.ly.wvp.data.model.AlarmInfo.Companion.ACT_STOP
+import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_MOVE
+import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_OTHER
 import com.ly.wvp.data.storage.SettingsConfig
 import com.ly.wvp.util.JsonParseUtil
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +32,12 @@ import okhttp3.Request
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
 * 有记录的日期
@@ -112,11 +122,13 @@ class CloudRecordDetailViewModel : ViewModel() {
         private const val TAG = "CloudRecordDetailViewModel"
     }
 
+    private val mFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private var _recordCalendar = MutableLiveData<List<Calendar>>()
 
     private var _recordFileList = MutableLiveData<List<CloudRecord>>()
 
-    private var _recordAction = MutableLiveData<List<StreamDetectionItem>>()
+    private var _recordAction = MutableLiveData<List<AlarmInfo>>()
 
     private var _netError = MutableLiveData<NetError>()
 
@@ -124,10 +136,10 @@ class CloudRecordDetailViewModel : ViewModel() {
      * 请求云端录像播放url的数据流，每次点击列表出发请求，收到返回的url后将其写入Flow
      * 外部监听FLOW,有数据就开始播放， 策略：DROP_OLDEST
      */
-    private val _playUrlFlow = MutableSharedFlow<String>(extraBufferCapacity = 1,
+    private val _playUrlFlow = MutableSharedFlow<CloudRecord>(extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    fun getPlayUrlFlow(): Flow<String> = _playUrlFlow
+    fun getPlayUrlFlow(): Flow<CloudRecord> = _playUrlFlow
 
     private var config: SettingsConfig? = null
 
@@ -135,7 +147,7 @@ class CloudRecordDetailViewModel : ViewModel() {
 
     fun getRecordFileList(): LiveData<List<CloudRecord>> = _recordFileList
 
-    fun getRecordActionList(): LiveData<List<StreamDetectionItem>> = _recordAction
+    fun getRecordActionList(): LiveData<List<AlarmInfo>> = _recordAction
 
     fun getError(): LiveData<NetError> = _netError
 
@@ -143,6 +155,11 @@ class CloudRecordDetailViewModel : ViewModel() {
         this.config = config
     }
 
+    /**
+     * 请求某天的云端录像列表
+     * 同时加载当天的报警事件
+     * @see getRecordFileList
+     */
     fun requestRecordFileList(calendar:Calendar, app: String, stream: String){
 
         val yy = calendar.year.toString()
@@ -151,16 +168,26 @@ class CloudRecordDetailViewModel : ViewModel() {
 
         val startTime = "$yy-$mm-$dd 00:00:00"
         val endTime = "$yy-$mm-$dd 23:59:59"
+
+        //请求录像列表
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val cloudRecordList = loadRecordFileList(app, stream, startTime, endTime)
                 launch(Dispatchers.Main){
                     val list = ArrayList<CloudRecord>()
                     cloudRecordList.forEach{
-                        list.add(CloudRecord(app, stream, calendar, it.fileName ?: "", recordItem = it))
+                        list.add(CloudRecord(app, stream, calendar, it.fileName ?: "", recordItem = it, playUrl = null))
                     }
                     _recordFileList.value = list
                 }
+                if (cloudRecordList.isNotEmpty()) {
+                    //加载报警信息
+                    val alarmInfoList = loadAlarm(stream, startTime, endTime)
+                    launch(Dispatchers.Main){
+                        _recordAction.value = alarmInfoList
+                    }
+                }
+
             }
             catch (e: IOException){
                 Log.w(TAG, "requestCloudRecord: error ${e.message}" )
@@ -330,7 +357,7 @@ class CloudRecordDetailViewModel : ViewModel() {
      * http://localhost:18080/api/record/action/list?app=rtp&stream=43000000801320000008_43000000801310000008&startTime=2023-09-18%2000:00:00&endTime=2023-09-18%2023:59:59
      *
      */
-    private fun loadActionList(app: String, stream: String, startTime: String, endTime: String): ArrayList<StreamDetectionItem>{
+    private fun loadActionList(app: String, stream: String, startTime: String, endTime: String): ArrayList<AlarmInfo>{
         val httpUrl = HttpConnectionClient.buildPublicHeader(config!!)
             .addPathSegments(ServerUrl.RECORD_ACTION)
             .addPathSegment(ServerUrl.LIST)
@@ -392,9 +419,11 @@ class CloudRecordDetailViewModel : ViewModel() {
     fun getPlayUrl(record: CloudRecord) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                _playUrlFlow.emit(requestPlayUrl(record.recordItem.id))
+                val url = requestPlayUrl(record.recordItem.id)
+                record.playUrl = url
+                _playUrlFlow.emit(record)
             } catch (e: Exception) {
-                _playUrlFlow.emit(e.message ?: "")
+                _playUrlFlow.emit(record)
                 _netError.postValue(NetError(NetError.OTHER_EXCEPTION, e.message ?: ""))
             }
         }
@@ -444,5 +473,123 @@ class CloudRecordDetailViewModel : ViewModel() {
         return ""
     }
 
+    private fun loadAlarm(stream: String, startTime: String, endTime: String): ArrayList<AlarmInfo>{
+        //http://127.0.0.1:18080/api/alarm/all?page=1&count=100&deviceId=34020000001320000002&alarmPriority=&alarmMethod=&alarmType=&startTime=2024-05-15%2008:00:00&endTime=
+        val page = "1"
+        val count = "1000000"
+        val deviceId = stream.split("_")[0]
+        val channelId = stream.split("_")[1]
+        val httpUrl = HttpConnectionClient.buildPublicHeader(config!!)
+            .addPathSegments(ServerUrl.API_ALARM)
+            .addPathSegment(ServerUrl.ALL)
+            .addQueryParameter(ServerUrl.PARAM_KEY_COUNT, count)
+            .addQueryParameter(ServerUrl.PARAM_KEY_PAGE, page)
+            .addQueryParameter(ServerUrl.DEVICE_ID, deviceId)
+            .addQueryParameter(ServerUrl.START_TIME, startTime)
+            .addQueryParameter(ServerUrl.END_TIME, endTime)
+            .build()
+        val request = Request.Builder()
+            .url(httpUrl)
+            .get()
+            .build()
+        HttpConnectionClient.request(request).run {
+            this.body?.let {
+                try {
+                    /*
+                    {
+  "code": 0,
+  "msg": "成功",
+  "data": {
+    "total": 1,
+    "list": [
+      {
+        "id": "40",
+        "deviceId": "34020000001320000002",
+        "channelId": "34020000001320000002",
+        "alarmPriority": "4",
+        "alarmMethod": "5",
+        "alarmTime": "2024-05-15 19:00:07",
+        "alarmDescription": "",
+        "longitude": 0,
+        "latitude": 0,
+        "alarmType": "2",
+        "createTime": "2024-05-15 19:00:14"
+      }
+    ]
+
+                     */
+                    val alarmRecordList = ArrayList<AlarmInfo>()
+                    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
+                    val jsonObj = JSONObject(it.string())
+                    val code = jsonObj.getInt(CODE)
+                    val msg = jsonObj.getString(MSG)
+                    when (code) {
+                        0 -> {
+                            val alarmList = jsonObj.getJSONObject("data").getJSONArray("list")
+                            for (i in 0 until alarmList.length()){
+                                val alarm = alarmList.getJSONObject(i)
+                                val alarmStream = alarm.getString("deviceId")+"_"+alarm.getString("channelId")
+                                if (stream == alarmStream){
+                                    val time = alarm.getString("alarmTime")
+                                    val date = dateFormat.parse(time)
+                                    Log.d(TAG, "loadAlarm: time $time")
+                                    if (date != null) {
+                                        val alarmMethod = alarm.getInt("alarmMethod")
+                                        //5视频报警
+                                        if (alarmMethod == 5){
+                                            val type = alarm.getInt("alarmType")
+                                            val alarminfo = AlarmInfo()
+
+                                            //alarm报警信息转换为AlarmInfo
+                                            alarminfo.app = "rtp"
+                                            if (type == 2) {
+                                                alarminfo.alarmType = EVENT_MOVE
+                                            }
+                                            else{
+                                                alarminfo.alarmType = EVENT_OTHER
+                                            }
+                                            alarminfo.actFlag = ACT_START
+                                            alarminfo.actTime = time
+                                            alarminfo.stream = stream
+                                            alarmRecordList.add(alarminfo)
+                                            autoAppendAlarmFinish(alarminfo, date.time, alarmRecordList, dateFormat)
+                                        }
+                                    }
+                                }
+                            }
+                            Log.d(TAG, "loadAlarm: total alarm : ${alarmRecordList.size}")
+                        }
+                        else -> {
+                            _netError.postValue(NetError(code, msg))
+                        }
+                    }
+                    return alarmRecordList
+                }
+                catch (e: JSONException){
+                    _netError.postValue(NetError(NetError.JSON_ERROR, e.message ?: "JSONException"))
+                }
+                catch (e: Exception){
+                    _netError.postValue(NetError(NetError.OTHER_EXCEPTION, e.message ?: "Exception"))
+                }
+            } ?: kotlin.run {
+                _netError.postValue(NetError(NetError.OTHER_EXCEPTION, "Http response body is null"))
+            }
+        }
+        return ArrayList()
+    }
+
+    /**
+     * 报警信息只有开始时间，自动添加一个结束时间，默认事件延迟30s
+     * 比如移动报警时间为 19:00 结束时间为19:30
+     */
+    private fun autoAppendAlarmFinish(alarminfo: AlarmInfo, dateTime: Long, eventList: ArrayList<AlarmInfo>, format: SimpleDateFormat) {
+        val copy = AlarmInfo.copy(alarminfo)
+        copy.actFlag = ACT_STOP
+        copy.actTime =  LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(dateTime + AlarmInfo.ALARM_DURATION * 1000),
+            ZoneId.systemDefault())
+            .format(mFormat)
+        eventList.add(copy)
+    }
 
 }

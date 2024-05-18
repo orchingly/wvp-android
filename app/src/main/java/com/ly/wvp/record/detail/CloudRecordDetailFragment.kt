@@ -23,8 +23,8 @@ import com.ly.wvp.auth.NetError
 import com.ly.wvp.calendar.Calendar
 import com.ly.wvp.calendar.CalendarLayout
 import com.ly.wvp.calendar.CalendarView
-import com.ly.wvp.data.model.StreamDetectionItem
-import com.ly.wvp.data.model.StreamDetectionItem.Companion.EVENT_MOVE
+import com.ly.wvp.data.model.AlarmInfo
+import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_MOVE
 import com.ly.wvp.data.storage.DataStorage
 import com.ly.wvp.record.play.SampleCoverVideo
 import com.ly.wvp.util.shortToast
@@ -120,10 +120,6 @@ open class CloudRecordDetailFragment() : Fragment() {
         viewModel.getRecordFileList().observe(viewLifecycleOwner){
             Log.d(TAG, "onViewCreated: getRecordFileList changed")
             handleRecordList(it)
-            if (it.isNotEmpty()){
-                val record = it.first()
-//                viewModel.requestAction(record.calendar, record.app, record.stream)
-            }
         }
         viewModel.getRecordActionList().observe(viewLifecycleOwner){
             //处理录像事件:移动,人形
@@ -195,11 +191,16 @@ open class CloudRecordDetailFragment() : Fragment() {
         //服务器返回播放url之后开始播放
         CoroutineScope(IO).launch {
             viewModel.getPlayUrlFlow().collect{
-                Log.d(TAG, "onRecordPlay: play url = $it")
+                val url = it.playUrl
+                Log.d(TAG, "onRecordPlay: play url = $url")
                 launch(Main){
-                    buildGSYVideoOptionBuilder(it).build(player)
+                    if (url.isNullOrEmpty()){
+                        shortToast("获取播放地址失败")
+                        return@launch
+                    }
+                    buildGSYVideoOptionBuilder(url).build(player)
                     //刷新进度条事件
-//            refreshEventOnProgressBar(record)
+                    refreshEventOnProgressBar(it)
                     player.startPlayLogic()
                 }
             }
@@ -437,7 +438,7 @@ open class CloudRecordDetailFragment() : Fragment() {
 
     private var actionJob: Job? = null
     @SuppressLint("NotifyDataSetChanged")
-    private fun handleRecordAction(actionList: List<StreamDetectionItem>) {
+    private fun handleRecordAction(actionList: List<AlarmInfo>) {
         CoroutineScope(Main).launch {
             actionJob?.cancel()
             //耗时任务开启协程

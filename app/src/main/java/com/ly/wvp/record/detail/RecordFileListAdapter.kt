@@ -10,15 +10,18 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.ly.wvp.R
-import com.ly.wvp.data.model.StreamDetectionItem
-import com.ly.wvp.data.model.StreamDetectionItem.Companion.ACT_START
-import com.ly.wvp.data.model.StreamDetectionItem.Companion.ACT_STOP
-import com.ly.wvp.data.model.StreamDetectionItem.Companion.EVENT_MOVE
-import com.ly.wvp.data.model.StreamDetectionItem.Companion.EVENT_PERSON
+import com.ly.wvp.data.model.AlarmInfo
+import com.ly.wvp.data.model.AlarmInfo.Companion.ACT_START
+import com.ly.wvp.data.model.AlarmInfo.Companion.ACT_STOP
+import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_MOVE
+import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_OTHER
+import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_PERSON
 import kotlinx.coroutines.yield
 import java.text.SimpleDateFormat
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
@@ -30,7 +33,7 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
     }
 
     private val recordList = ArrayList<CloudRecord>()
-    private val actionList = ArrayList<StreamDetectionItem>()
+    private val actionList = ArrayList<AlarmInfo>()
     private var playListener: PlayListener? = null
 
     private var mLastPlayItem: FileListHolder? = null
@@ -67,31 +70,14 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
     /**
      * 解析录像事件
      */
-    suspend fun analyzeRecordAction(list: List<StreamDetectionItem>) {
+    suspend fun analyzeRecordAction(list: List<AlarmInfo>) {
         Log.d(TAG, "updateActionList: record size: ${recordList.size}")
         for (k in 0 until recordList.size){
             yield()
             val it = recordList[k]
-            val fileName = it.recordFile
-            val fileSp = fileName.split("-")
-            //起始时间
-            val from = fileSp[0]
-            val to = fileSp[1]
 
-            val calendar = it.calendar
-            val yy = calendar.year.toString()
-            val mm = if (calendar.month < 10) "0${calendar.month}" else calendar.month.toString()
-            val dd = if (calendar.day < 10) "0${calendar.day}" else calendar.day.toString()
-
-
-            val date = "$yy-$mm-$dd"
-            val fromDateTime = "$date $from"
-            val toDateTime = "$date $to"
-
-            Log.d(TAG, "updateActionList: record : $fromDateTime - $toDateTime")
-
-            val localDateTimeFrom = LocalDateTime.parse(fromDateTime, mFormat)
-            val localDateTimeTo = LocalDateTime.parse(toDateTime, mFormat)
+            val localDateTimeFrom = LocalDateTime.ofInstant(Instant.ofEpochMilli(it.recordItem.startTime), ZoneId.systemDefault())
+            val localDateTimeTo = LocalDateTime.ofInstant(Instant.ofEpochMilli(it.recordItem.endTime), ZoneId.systemDefault())
 
             it.eventList = ArrayList()
             if (localDateTimeFrom.isBefore(localDateTimeTo)){
@@ -131,11 +117,11 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
      */
     private fun extractEvent(
         eventType: Int,
-        source: List<StreamDetectionItem>
-    ): ArrayList<StreamDetectionItem> {
-        val target = ArrayList<StreamDetectionItem>()
+        source: List<AlarmInfo>
+    ): ArrayList<AlarmInfo> {
+        val target = ArrayList<AlarmInfo>()
         source.forEach{
-            if (it.dType == eventType){
+            if (it.alarmType == eventType){
                 target.add(it)
             }
         }
@@ -149,7 +135,7 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
     private fun checkAction(
         localDateTimeFrom: LocalDateTime,
         localDateTimeTo: LocalDateTime,
-        list: List<StreamDetectionItem>
+        list: List<AlarmInfo>
     ): ArrayList<DetectionEvent> {
         //事件开始时间
         var actionDetectStartTime = ""
@@ -167,8 +153,8 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
             }
 
             val actionDateTime = LocalDateTime.parse(actPointTime, mFormat)
-            val action = list[i].actType
-            val event = list[i].dType
+            val action = list[i].actFlag
+            val event = list[i].alarmType
 
             //还未到起始时间,继续寻找下一个事件点
             if (actionDateTime.isBefore(localDateTimeFrom)){
@@ -249,15 +235,6 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
 
     override fun onBindViewHolder(holder: FileListHolder, position: Int) {
         val cloudRecord = recordList[position]
-        val fileName = recordList[position].recordFile
-//        val fileSp = fileName.split("-")
-        //14:42:35-14:42:48-13517.mp4
-//        val timeSuffix = fileSp[2]
-//        val index = timeSuffix.indexOf(".", 0, true)
-//        val timeStamp = if (index > -1){
-//            timeSuffix.substring(0, index)
-//        } else "0"
-
         val timeSecond = convertToTime(cloudRecord.recordItem.timeLen)
         //起始时间
 
@@ -287,9 +264,9 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
             return
         }
         else{
-            if (eventList.first().event == EVENT_PERSON || eventList.last().event == EVENT_PERSON){
+            if (eventList.first().event == EVENT_OTHER || eventList.last().event == EVENT_OTHER){
                 holder.recordState.setTextColor(holder.itemView.context.resources.getColorStateList(R.color.red, holder.itemView.context.theme))
-                holder.recordState.text = "人形"
+                holder.recordState.text = "异常"
             }
             else if (eventList.first().event == EVENT_MOVE || eventList.last().event == EVENT_MOVE){
                 holder.recordState.setTextColor(holder.itemView.context.resources.getColorStateList(R.color.red, holder.itemView.context.theme))
@@ -298,54 +275,6 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
 
         }
 
-    }
-
-    /**
-     * 老版本日期格式: 14:42:35-14:42:48-13517.mp4
-     * 新版本日期格式: 155343-155430.mp4
-     * 将新版本格式转为老版本格式
-     */
-    private fun formatFileNameIfNeeded(recordFile: String): String {
-        val fileSp = recordFile.split("-")
-        if (fileSp.isEmpty()){
-            return recordFile
-        }
-        if (fileSp.size < 2){
-            Log.w(TAG, "formatFileNameIfNeeded: invalid record file: $recordFile")
-            return recordFile
-        }
-        if (fileSp[0].contains(":")){
-            return recordFile
-        }
-        else{
-
-            val target = SimpleDateFormat("HH:mm:ss", Locale.CHINA)
-            val origin = SimpleDateFormat("HHmmss", Locale.CHINA)
-            val dayOfEndDate: Date = origin.parse("235959")?: kotlin.run{
-                Log.w(TAG, "formatFileNameIfNeeded: parse failed 235959" )
-                return recordFile
-            }
-            val dayOfStartDate: Date = origin.parse("000000")?:  kotlin.run{
-                Log.w(TAG, "formatFileNameIfNeeded: parse failed 000000" )
-                return recordFile
-            }
-            val from: Date = origin.parse(fileSp[0])?: kotlin.run {
-                Log.w(TAG, "formatFileNameIfNeeded: parse from failed $recordFile")
-                return recordFile
-            }
-            val to: Date = origin.parse(fileSp[1].substring(0, fileSp[1].indexOf(".")))?: kotlin.run {
-                Log.w(TAG, "formatFileNameIfNeeded: parse to failed $recordFile")
-                return recordFile
-            }
-            //开始时间大于结束时间,支持跨1天,跨两天不支持
-            val duration = if (from.time > to.time){
-                dayOfEndDate.time - from.time + (to.time - dayOfStartDate.time)
-            }
-            else{
-                to.time - from.time
-            }
-            return "${target.format(from)}-${target.format(to)}-${duration}.mp4"
-        }
     }
 
     private fun convertToTime(timeStamp: Long): String{
@@ -371,7 +300,6 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
     }
 
     var clickPos: Int = -1
-//    var clicked: Boolean = false
 
     private fun handleClickEvent(holder: FileListHolder, context: Context){
         holder.record?.let {

@@ -22,7 +22,7 @@ import com.ly.wvp.data.model.DeviceChanel
 import com.ly.wvp.data.model.MediaServerItem
 import com.ly.wvp.data.model.PageInfo
 import com.ly.wvp.data.model.StreamContent
-import com.ly.wvp.data.model.StreamDetectionItem
+import com.ly.wvp.data.model.AlarmInfo
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -218,16 +218,16 @@ object JsonParseUtil {
         return recordList
     }
 
-    fun parseRecordActionList(jsonArray: JSONArray): ArrayList<StreamDetectionItem>{
-        val actionList = ArrayList<StreamDetectionItem>()
+    fun parseRecordActionList(jsonArray: JSONArray): ArrayList<AlarmInfo>{
+        val actionList = ArrayList<AlarmInfo>()
         for (i in 0 until jsonArray.length()){
-            val action = StreamDetectionItem()
+            val action = AlarmInfo()
             val obj = jsonArray.getJSONObject(i)
-            action.app = obj.getString(StreamDetectionItem.app)
-            action.stream = obj.getString(StreamDetectionItem.stream)
-            action.dType = obj.getInt(StreamDetectionItem.DType)
-            action.actTime = obj.getString(StreamDetectionItem.actTime)
-            action.actType = obj.getInt(StreamDetectionItem.actType)
+            action.app = obj.getString(AlarmInfo.app)
+            action.stream = obj.getString(AlarmInfo.stream)
+            action.alarmType = obj.getInt(AlarmInfo.DType)
+            action.actTime = obj.getString(AlarmInfo.actTime)
+            action.actFlag = obj.getInt(AlarmInfo.actType)
             actionList.add(action)
         }
         return actionList

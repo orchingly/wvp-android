@@ -72,5 +72,17 @@ class ServerUrl {
          */
         const val RECORD_ID = "recordId"
 
+        /**
+         * 报警信息接口
+         */
+        const val API_ALARM = "api/alarm"
+
+        /**
+         * 查询所有报警
+         */
+        const val ALL = "all"
+
+        const val DEVICE_ID = "deviceId"
+
     }
 }
