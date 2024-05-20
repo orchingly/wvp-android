@@ -200,4 +200,34 @@ class DataStorage(context: Context) {
         }
     }
 
+
+    private var cacheAlarmFilterArray: BooleanArray? = null
+
+    /**
+     * 传入报警类型:正常,移动...
+     * 返回每个报警类型的选中状态
+     */
+    fun getAlarmFilterArray(alarm: Array<String>): BooleanArray {
+        if (cacheAlarmFilterArray == null){
+            cacheAlarmFilterArray = BooleanArray(alarm.size)
+            for (i in alarm.indices){
+                cacheAlarmFilterArray!![i] = sp.getBoolean(alarm[i], false)
+            }
+        }
+        return cacheAlarmFilterArray!!
+    }
+
+    /**
+     * 保存报警过滤选项选中状态
+     * key:报警类型名称, value:状态
+     */
+    fun saveAlarmFilterArray(alarm: Array<String>, filter: BooleanArray){
+        cacheAlarmFilterArray = filter.copyOf()
+        val ed = sp.edit()
+        for (i in alarm.indices){
+            ed.putBoolean(alarm[i], filter[i])
+        }
+        ed.apply()
+    }
+
 }

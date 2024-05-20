@@ -9,6 +9,14 @@
     <include layout="@layout/top_action_bar"
         android:id="@+id/navigation_header"/>
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/alarm_filter_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/navigation_header"
+        android:layout_alignParentEnd="true"
+        />
+
     <RelativeLayout
         android:layout_below="@+id/navigation_header"
         android:id="@+id/rl_tool"
@@ -146,6 +154,8 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/record_detail_list"

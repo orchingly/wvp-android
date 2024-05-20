@@ -24,4 +24,17 @@
         tools:text="title" />
 
 
+    <ImageView
+        android:id="@+id/cloud_record_filter"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="24dp"
+        android:contentDescription="@string/select_desc"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:scaleType="centerInside"
+        tools:visibility="visible"
+        android:visibility="gone"
+        android:src="@drawable/cloud_record_filter_img" />
+
 </RelativeLayout>

@@ -194,6 +194,7 @@
     <string name="cancel">取消</string>
     <string name="select_desc">选择</string>
     <string name="go_cloud_record">云端录像</string>
+    <string name="alarm_title_filter">录像筛选</string>
 
     <string-array name="week_string_array">
         <item>Sun</item>

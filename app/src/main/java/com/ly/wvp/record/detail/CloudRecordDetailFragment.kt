@@ -1,11 +1,14 @@
 package com.ly.wvp.record.detail
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
@@ -13,6 +16,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -26,6 +30,7 @@ import com.ly.wvp.calendar.CalendarView
 import com.ly.wvp.data.model.AlarmInfo
 import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_MOVE
 import com.ly.wvp.data.storage.DataStorage
+import com.ly.wvp.record.detail.dialog.AlarmFilterViewModel
 import com.ly.wvp.record.play.SampleCoverVideo
 import com.ly.wvp.util.shortToast
 import com.ly.wvp.widget.progress.SectionBean
@@ -41,6 +46,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
+import kotlin.math.sign
 
 open class CloudRecordDetailFragment() : Fragment() {
 
@@ -63,6 +69,12 @@ open class CloudRecordDetailFragment() : Fragment() {
 
     private lateinit var mActionBack: ImageView
     private lateinit var mTitleOfCalendar: TextView
+
+    private lateinit var mAlarmFilterBtn: ImageView
+    private lateinit var mAlarmFilterList: RecyclerView
+
+    private lateinit var mAlarmFilterViewModel: AlarmFilterViewModel
+
 
     private var recordCache: CloudRecord? = null
 
@@ -87,11 +99,20 @@ open class CloudRecordDetailFragment() : Fragment() {
 
         player = view.findViewById(R.id.record_detail_player)
 
+        mAlarmFilterBtn = view.findViewById(R.id.cloud_record_filter)
+        mAlarmFilterBtn.visibility = VISIBLE
+        mAlarmFilterList = view.findViewById(R.id.alarm_filter_list)
         calendarLayout = view.findViewById(R.id.calendarLayout)
         dayRecordList = view.findViewById(R.id.record_detail_list)
         mTitleOfCalendar = view.findViewById(R.id.action_bar_content_title)
         mActionBack = view.findViewById(R.id.action_bar_back_img)
         storage = DataStorage.getInstance(requireContext())
+
+        mAlarmFilterViewModel = AlarmFilterViewModel(storage)
+        mAlarmFilterViewModel.getCheckedAlarmOptions().observe(viewLifecycleOwner){
+            fileAdapter.onAlarmFilterChanged(it, mAlarmFilterViewModel.getAlarmOptionsArray())
+        }
+
         viewModel.setConfig(storage.getConfig())
 //        initData()
         fileAdapter = RecordFileListAdapter()
@@ -218,6 +239,10 @@ open class CloudRecordDetailFragment() : Fragment() {
                 }
             }
         })
+
+        mAlarmFilterBtn.setOnClickListener {
+            onCloudRecordFilterClick(it.context)
+        }
     }
 
     /**
@@ -563,6 +588,21 @@ open class CloudRecordDetailFragment() : Fragment() {
     override fun onResume() {
         super.onResume()
         GSYVideoManager.onResume(false)
+    }
+
+    fun onCloudRecordFilterClick(context: Context) {
+        val options = mAlarmFilterViewModel.getCheckedAlarmOptions().value!!
+        val mCheckedCache = BooleanArray(options.size)
+        for (i in options.indices){
+            mCheckedCache[i] = options[i]
+        }
+        AlertDialog.Builder(context)
+            .setTitle(R.string.alarm_title_filter)
+            .setMultiChoiceItems(mAlarmFilterViewModel.getAlarmOptionsArray(), mCheckedCache, mAlarmFilterViewModel.getAlarmChoiceListener())
+            .setPositiveButton(R.string.confirm, mAlarmFilterViewModel.getAlarmDialogClickListener())
+            .setNegativeButton(R.string.cancel, mAlarmFilterViewModel.getAlarmDialogClickListener())
+            .create()
+            .show()
     }
 
 }

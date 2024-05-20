@@ -1,5 +1,6 @@
 package com.ly.wvp.record.detail
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.util.Log
@@ -15,7 +16,7 @@ import com.ly.wvp.data.model.AlarmInfo.Companion.ACT_START
 import com.ly.wvp.data.model.AlarmInfo.Companion.ACT_STOP
 import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_MOVE
 import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_OTHER
-import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_PERSON
+import com.ly.wvp.record.detail.dialog.AlarmFilterViewModel
 import kotlinx.coroutines.yield
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -23,7 +24,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.Locale
 
 class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
@@ -32,7 +32,15 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
         private const val TAG = "RecordFileListAdapter"
     }
 
+    /**
+     * 当前显示的录像,筛选过后的
+     */
     private val recordList = ArrayList<CloudRecord>()
+
+    /**
+     * 所有录像
+     */
+    private val totalRecordList = ArrayList<CloudRecord>()
     private val actionList = ArrayList<AlarmInfo>()
     private var playListener: PlayListener? = null
 
@@ -50,8 +58,59 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
 
     fun updateRecordList(record: List<CloudRecord>){
         recordList.clear()
+        totalRecordList.clear()
+        totalRecordList.addAll(record)
         recordList.addAll(record)
+        addAlarmTag()
         clickPos = -1
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun onAlarmFilterChanged(
+        checkedValue: BooleanArray,
+        alarmOptions: Array<String>
+    ){
+
+        recordList.clear()
+        /*
+         * 筛选出选中的报警类型
+         * 多选
+         */
+        for (i in totalRecordList.indices){
+            val record = totalRecordList[i]
+            for (j in alarmOptions.indices){
+                //选中的报警类型
+                if (checkedValue[j] && record.alarmTag == alarmOptions[j]){
+                    recordList.add(record)
+                }
+            }
+        }
+        Log.d(TAG, "onAlarmFilterChanged: filter result ${recordList.size}")
+        notifyDataSetChanged()
+    }
+
+    /**
+     * 给每个录像记录打上报警类型的标签
+     */
+    private fun addAlarmTag(){
+        for (i in totalRecordList.indices){
+            val record = totalRecordList[i]
+            val eventList = record.eventList
+            //没有异常
+            if (eventList.isEmpty()){
+                record.alarmTag = AlarmFilterViewModel.NORMAL
+            }
+            else{
+                //其他异常
+                if (eventList.first().event == EVENT_OTHER || eventList.last().event == EVENT_OTHER){
+                    record.alarmTag = AlarmFilterViewModel.OTHER
+                }
+                //移动侦测报警
+                else if (eventList.first().event == EVENT_MOVE || eventList.last().event == EVENT_MOVE){
+                    record.alarmTag = AlarmFilterViewModel.MOVE
+                }
+            }
+        }
     }
 
 //    private fun reformatCloudRecordIfNeeded(record: List<CloudRecord>): Collection<CloudRecord> {

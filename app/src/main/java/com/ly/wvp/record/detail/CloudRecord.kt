@@ -25,5 +25,9 @@ data class CloudRecord(val app: String,
                        /**
                         * 播放地址
                         */
-                       var playUrl: String?)
+                       var playUrl: String?,
+                       /**
+                        * 报警标签
+                        */
+                       var alarmTag: String? = null)
 
