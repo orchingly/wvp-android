@@ -112,7 +112,7 @@ open class CloudRecordDetailFragment() : Fragment() {
         }
 
         viewModel.setConfig(storage.getConfig())
-//        initData()
+
         fileAdapter = RecordFileListAdapter()
         dayRecordList.adapter = fileAdapter
         dayRecordList.layoutManager = LinearLayoutManager(requireContext())
