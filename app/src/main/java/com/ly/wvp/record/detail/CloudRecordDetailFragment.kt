@@ -16,7 +16,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -46,7 +45,6 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
-import kotlin.math.sign
 
 open class CloudRecordDetailFragment() : Fragment() {
 
@@ -142,9 +140,9 @@ open class CloudRecordDetailFragment() : Fragment() {
             Log.d(TAG, "onViewCreated: getRecordFileList changed")
             handleRecordList(it)
         }
-        viewModel.getRecordActionList().observe(viewLifecycleOwner){
-            //处理录像事件:移动,人形
-            handleRecordAction(it)
+        viewModel.getRecordAlarmList().observe(viewLifecycleOwner){
+            //处理录像报警事件
+            handleRecordAlarm(it)
         }
         viewModel.getError().observe(viewLifecycleOwner){
             handleError(it)
@@ -456,14 +454,14 @@ open class CloudRecordDetailFragment() : Fragment() {
     private fun handleRecordList(record: List<CloudRecord>) {
         //更新录像列表之前必须取消录像事件的解析任务, 否则更新recordList导致多线程不安全
         actionJob?.cancel()
-        fileAdapter.updateRecordList(record)
+        fileAdapter.onCloudRecordListChanged(record)
         fileAdapter.notifyDataSetChanged()
         Log.d(TAG, "handleRecordList: record size ${record.size}")
     }
 
     private var actionJob: Job? = null
     @SuppressLint("NotifyDataSetChanged")
-    private fun handleRecordAction(actionList: List<AlarmInfo>) {
+    private fun handleRecordAlarm(actionList: List<AlarmInfo>) {
         CoroutineScope(Main).launch {
             actionJob?.cancel()
             //耗时任务开启协程
@@ -471,7 +469,7 @@ open class CloudRecordDetailFragment() : Fragment() {
                 Log.d(TAG, "handleRecordAction: start")
                 val start = System.currentTimeMillis()
                 //数据多的时候耗时长,actionList.size=122, recordList.size=294 耗时566ms, 容易导致ANR
-                fileAdapter.analyzeRecordAction(actionList)
+                fileAdapter.onRecordAlarmChanged(actionList)
                 Log.d(TAG, "handleRecordAction: time used ${System.currentTimeMillis() - start}, action size : ${actionList.size}")
             }
             actionJob?.join()
@@ -591,14 +589,12 @@ open class CloudRecordDetailFragment() : Fragment() {
     }
 
     fun onCloudRecordFilterClick(context: Context) {
-        val options = mAlarmFilterViewModel.getCheckedAlarmOptions().value!!
-        val mCheckedCache = BooleanArray(options.size)
-        for (i in options.indices){
-            mCheckedCache[i] = options[i]
-        }
+        val checkedOptions = mAlarmFilterViewModel.getOriginCheckedAlarmOptions()
+        val mCheckedItems = checkedOptions.copyOf()
+        mAlarmFilterViewModel.syncCachedChecked(mCheckedItems)
         AlertDialog.Builder(context)
             .setTitle(R.string.alarm_title_filter)
-            .setMultiChoiceItems(mAlarmFilterViewModel.getAlarmOptionsArray(), mCheckedCache, mAlarmFilterViewModel.getAlarmChoiceListener())
+            .setMultiChoiceItems(mAlarmFilterViewModel.getAlarmOptionsArray(), mCheckedItems, mAlarmFilterViewModel.getAlarmChoiceListener())
             .setPositiveButton(R.string.confirm, mAlarmFilterViewModel.getAlarmDialogClickListener())
             .setNegativeButton(R.string.cancel, mAlarmFilterViewModel.getAlarmDialogClickListener())
             .create()

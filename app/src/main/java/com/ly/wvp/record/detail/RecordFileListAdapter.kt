@@ -3,6 +3,9 @@ package com.ly.wvp.record.detail
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +21,7 @@ import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_MOVE
 import com.ly.wvp.data.model.AlarmInfo.Companion.EVENT_OTHER
 import com.ly.wvp.record.detail.dialog.AlarmFilterViewModel
 import kotlinx.coroutines.yield
+import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Instant
@@ -30,6 +34,9 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
 
     companion object{
         private const val TAG = "RecordFileListAdapter"
+        const val MSG_FILTER_ALARM = 1
+        private const val DEBUG = false
+
     }
 
     /**
@@ -51,41 +58,90 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
 
     private val mFileTimeFormat = SimpleDateFormat("HH:mm:ss", Locale.CHINA)
 
+    /**
+     * 标记每次重新请求录像列表后报警事件是否加载完成
+     */
+    private var mEventListPrepared = false
+
+    private var mCheckedAlarm: BooleanArray? = null
+    private var mAlarmOptions: Array<String>? = null
+
+    private val mHandler = CloudRecordHandler(Looper.getMainLooper(), this)
+
+    class CloudRecordHandler(looper: Looper, adapter: RecordFileListAdapter) : Handler(looper) {
+
+        private var mInnerAdapter:WeakReference<RecordFileListAdapter>
+
+        init {
+            mInnerAdapter = WeakReference(adapter)
+        }
+
+
+        override fun handleMessage(msg: Message) {
+            when(msg.what){
+                MSG_FILTER_ALARM -> {
+                    mInnerAdapter.get()?.updateAlarmRecordList()
+                }
+            }
+        }
+    }
 
     fun setPlayListener(playListener: PlayListener){
         this.playListener = playListener
     }
 
-    fun updateRecordList(record: List<CloudRecord>){
+    fun onCloudRecordListChanged(record: List<CloudRecord>){
         recordList.clear()
         totalRecordList.clear()
         totalRecordList.addAll(record)
-        recordList.addAll(record)
-        addAlarmTag()
+        //recordList.addAll(record)
+        mEventListPrepared = false
         clickPos = -1
     }
 
-    @SuppressLint("NotifyDataSetChanged")
+    /**
+     * 报警筛选条件发生变化,重新过滤数据
+     */
     fun onAlarmFilterChanged(
         checkedValue: BooleanArray,
         alarmOptions: Array<String>
     ){
+        mAlarmOptions = alarmOptions
+        mCheckedAlarm = checkedValue
+        //报警事件没有加载成功,等加载成功后再发消息通知过滤
+        if (!mEventListPrepared){
+            return
+        }
+        //报警事件已加载好,通知更新过滤结果
+        mHandler.sendEmptyMessage(MSG_FILTER_ALARM)
+    }
 
+    /**
+     * 刷新报警事件
+     */
+    @SuppressLint("NotifyDataSetChanged")
+    private fun updateAlarmRecordList(){
         recordList.clear()
         /*
          * 筛选出选中的报警类型
          * 多选
          */
-        for (i in totalRecordList.indices){
-            val record = totalRecordList[i]
-            for (j in alarmOptions.indices){
-                //选中的报警类型
-                if (checkedValue[j] && record.alarmTag == alarmOptions[j]){
-                    recordList.add(record)
+        mAlarmOptions?.let { options ->
+            for (i in totalRecordList.indices){
+                val record = totalRecordList[i]
+                for (j in options.indices){
+                    //选中的报警类型
+                    if (mCheckedAlarm?.get(j) == true && record.alarmTag == options[j]){
+                        recordList.add(record)
+                    }
                 }
             }
+            Log.d(TAG, "onAlarmFilterChanged: filter result ${recordList.size}")
+        } ?: kotlin.run {
+            //没有设置筛选条件,全部显示
+            Log.d(TAG, "updateAlarm: no alarm filter options set")
+            recordList.addAll(totalRecordList)
         }
-        Log.d(TAG, "onAlarmFilterChanged: filter result ${recordList.size}")
         notifyDataSetChanged()
     }
 
@@ -104,36 +160,26 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
                 //其他异常
                 if (eventList.first().event == EVENT_OTHER || eventList.last().event == EVENT_OTHER){
                     record.alarmTag = AlarmFilterViewModel.OTHER
+                    Log.d(TAG, "addAlarmTag: OTHER")
                 }
                 //移动侦测报警
                 else if (eventList.first().event == EVENT_MOVE || eventList.last().event == EVENT_MOVE){
                     record.alarmTag = AlarmFilterViewModel.MOVE
+                    Log.d(TAG, "addAlarmTag: MOVE")
                 }
             }
         }
     }
 
-//    private fun reformatCloudRecordIfNeeded(record: List<CloudRecord>): Collection<CloudRecord> {
-//        val formatRecord = ArrayList<CloudRecord>()
-//        record.forEach {
-//            val fileName = formatFileNameIfNeeded(it.recordFile)
-//            //时间戳格式
-//            //onRecordPlay播放url用时间戳来区分新版旧版的格式
-//            val format = if (it.recordFile.contains(":")) TIME_FORMAT_VERSION_1 else TIME_FORMAT_VERSION_2
-//            formatRecord.add(CloudRecord(it.app, it.stream, it.calendar, fileName, it.eventList, it.duration, format))
-//        }
-//       return formatRecord
-//    }
-
 
     /**
-     * 解析录像事件
+     * 成功加载到录像报警事件,开始解析
      */
-    suspend fun analyzeRecordAction(list: List<AlarmInfo>) {
-        Log.d(TAG, "updateActionList: record size: ${recordList.size}")
-        for (k in 0 until recordList.size){
-            yield()
-            val it = recordList[k]
+    suspend fun onRecordAlarmChanged(list: List<AlarmInfo>) {
+        Log.d(TAG, "updateActionList: record size: ${totalRecordList.size}")
+        yield()
+        for (k in 0 until totalRecordList.size){
+            val it = totalRecordList[k]
 
             val localDateTimeFrom = LocalDateTime.ofInstant(Instant.ofEpochMilli(it.recordItem.startTime), ZoneId.systemDefault())
             val localDateTimeTo = LocalDateTime.ofInstant(Instant.ofEpochMilli(it.recordItem.endTime), ZoneId.systemDefault())
@@ -145,19 +191,19 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
                 it.duration = Duration.between(localDateTimeFrom, localDateTimeTo)
                 localDateTimeFrom.toLocalTime()
 
-                //移动事件
+                //移动报警
                 val moveEvents = extractEvent(EVENT_MOVE, list)
                 if (moveEvents.isNotEmpty()){
                     val eventList = checkAction(localDateTimeFrom, localDateTimeTo, moveEvents)
                     it.eventList.addAll(eventList)
                 }
 
-                //人形事件
-//                val personEvents = extractEvent(EVENT_PERSON, list)
-//                if (personEvents.isNotEmpty()){
-//                    val eventList = checkAction(localDateTimeFrom, localDateTimeTo, personEvents)
-//                    it.eventList.addAll(eventList)
-//                }
+                //其他报警
+                val otherEvents = extractEvent(EVENT_OTHER, list)
+                if (otherEvents.isNotEmpty()){
+                    val eventList = checkAction(localDateTimeFrom, localDateTimeTo, otherEvents)
+                    it.eventList.addAll(eventList)
+                }
 
             }
             //日期跨天
@@ -165,10 +211,11 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
                 Log.d(TAG, "updateActionList: time cross day")
             }
         }
-//        recordList.forEach {
-//
-//        }
-
+        addAlarmTag()
+        //标记报警事件加载完成
+        mEventListPrepared = true
+        //报警事件加载完成,触发过滤条件
+        mHandler.sendEmptyMessage(MSG_FILTER_ALARM)
     }
 
     /**
@@ -217,18 +264,18 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
 
             //还未到起始时间,继续寻找下一个事件点
             if (actionDateTime.isBefore(localDateTimeFrom)){
-                Log.d(TAG, "checkAction: actionDateTime.isBefore(localDateTimeFrom) : actionDateTime = $actPointTime,  localDateTimeFrom = ${localDateTimeFrom.format(mFormat)}")
+                if (DEBUG) Log.d(TAG, "checkAction: actionDateTime.isBefore(localDateTimeFrom) : actionDateTime = $actPointTime,  localDateTimeFrom = ${localDateTimeFrom.format(mFormat)}")
                 lastAction = action
                 continue
             }
 
-            Log.d(TAG, "checkAction: actPointTime = $actPointTime, action = $action, event = $event")
+            if (DEBUG) Log.d(TAG, "checkAction: actPointTime = $actPointTime, action = $action, event = $event")
 
             //超过结束时间,后续事件无效
             if (actionDateTime.isAfter(localDateTimeTo)){
                 //时间片段结束,但是事件没有结束,从actionDetectStartTime到事件片段结尾都应该标记为事件
                 if (actionDetectStartTime.isNotEmpty()){
-                    Log.d(TAG, "checkAction: actionDateTime.isAfter(localDateTimeTo) actionDetectStartTime = $actionDetectStartTime")
+                    if (DEBUG)  Log.d(TAG, "checkAction: actionDateTime.isAfter(localDateTimeTo) actionDetectStartTime = $actionDetectStartTime")
                     eventList.add( DetectionEvent(actionDetectStartTime, actPointTime, event,
                         Duration.between(localDateTimeFrom, actionDetectStartTimeLocal).seconds,-1))
                 }
@@ -236,14 +283,14 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
                 else if (lastAction == ACT_START
                     //增加保险, 理论上肯定是空
                     && eventList.isEmpty()){
-                    Log.d(TAG, "checkAction: lastAction == ACT_START, full event")
+                    if (DEBUG)  Log.d(TAG, "checkAction: lastAction == ACT_START, full event")
                     //开始事件发生在片段之前, 说明整个片段都属于该事件
                     eventList.add( DetectionEvent(localDateTimeFrom.format(mFormat), localDateTimeTo.format(mFormat), event,
                             0,-1))
                 }
                 //真的没有开始事件
                 else{
-                    Log.d(TAG, "checkAction: actionDateTime.isAfter(localDateTimeTo) actionDetectStartTime = empty")
+                    if (DEBUG)  Log.d(TAG, "checkAction: actionDateTime.isAfter(localDateTimeTo) actionDetectStartTime = empty")
                 }
                 return eventList
             }
@@ -253,14 +300,14 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
                 //第一次找到事件结束点,说明从from 到当前事件时间内都发生该事件,应当记录下来
                 //只找到事件结束没有找到开始
                 if (/*eventList.isEmpty() && */actionDetectStartTime.isEmpty()){
-                    Log.d(TAG, "checkAction: ACT_STOP actionDetectStartTime.isEmpty ")
+                    if (DEBUG)  Log.d(TAG, "checkAction: ACT_STOP actionDetectStartTime.isEmpty ")
                     val detectionEvent = DetectionEvent(localDateTimeFrom.format(mFormat), actionDateTime.toString(), event,
                         0, Duration.between(localDateTimeFrom, actionDateTime).seconds)
                     eventList.add(detectionEvent)
                 }
                 //from->to时间内必有开始事件的点,且被缓存, 此时应当记录起始时间
                 else{
-                    Log.d(TAG, "checkAction: ACT_STOP eventList.add ")
+                    if (DEBUG)  Log.d(TAG, "checkAction: ACT_STOP eventList.add ")
                     val detectionEvent = DetectionEvent(actionDetectStartTime, actPointTime, event,
                         Duration.between(localDateTimeFrom, actionDetectStartTimeLocal).seconds,
                         Duration.between(localDateTimeFrom, actionDateTime).seconds)
@@ -272,7 +319,7 @@ class RecordFileListAdapter: Adapter<RecordFileListAdapter.FileListHolder>() {
             }
             //找到一个事件开始点
             else if (action == ACT_START){
-                Log.d(TAG, "checkAction: ACT_START $actPointTime")
+                if (DEBUG)  Log.d(TAG, "checkAction: ACT_START $actPointTime")
                 actionDetectStartTime = actPointTime
                 actionDetectStartTimeLocal = actionDateTime
             }

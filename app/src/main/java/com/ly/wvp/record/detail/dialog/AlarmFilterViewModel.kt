@@ -30,16 +30,15 @@ class AlarmFilterViewModel(private val mStorage: DataStorage): ViewModel() {
     /**
      * 报警选项选中标记
      */
-    private lateinit var mCheckedAlarmOptions: BooleanArray
+    private val mCheckedAlarmOptions: BooleanArray = mStorage.getAlarmFilterArray(mAlarmOptionsArray)
 
     /**
      * 多选缓存,保存后刷新到 [_checkedAlarmOptions]
      */
-    private lateinit var mCheckedCache: BooleanArray
+    private var mCheckedCache: BooleanArray
 
 
     init {
-        mCheckedAlarmOptions = mStorage.getAlarmFilterArray(mAlarmOptionsArray)
         _checkedAlarmOptions.value = mCheckedAlarmOptions
         mCheckedCache = BooleanArray(mCheckedAlarmOptions.size)
     }
@@ -62,7 +61,7 @@ class AlarmFilterViewModel(private val mStorage: DataStorage): ViewModel() {
                         mCheckedAlarmOptions[i] = mCheckedCache[i]
                     }
                     mStorage.saveAlarmFilterArray(mAlarmOptionsArray, mCheckedAlarmOptions)
-                    _checkedAlarmOptions.value = mCheckedAlarmOptions
+                    _checkedAlarmOptions.value = mCheckedAlarmOptions.copyOf()
                 }
                 DialogInterface.BUTTON_NEGATIVE ->{
                     Log.d(TAG, "OnClickListener: cancel click")
@@ -71,6 +70,14 @@ class AlarmFilterViewModel(private val mStorage: DataStorage): ViewModel() {
         }
     }
 
+    /**
+     * 将view列表选项数据和cache同步, 如果弹窗取消没有保存数据再打开cache数据应该和之前保持一致
+     */
+    fun syncCachedChecked(checkedItems: BooleanArray){
+        for (i in checkedItems.indices){
+            mCheckedCache[i] = checkedItems[i]
+        }
+    }
 
     fun getAlarmDialogClickListener() = mAlarmDialogClickListener
 
@@ -80,6 +87,6 @@ class AlarmFilterViewModel(private val mStorage: DataStorage): ViewModel() {
 
     fun getCheckedAlarmOptions(): LiveData<BooleanArray> = _checkedAlarmOptions
 
-    fun getCheckedCache() = mCheckedCache
+    fun getOriginCheckedAlarmOptions(): BooleanArray = mCheckedAlarmOptions
 
 }

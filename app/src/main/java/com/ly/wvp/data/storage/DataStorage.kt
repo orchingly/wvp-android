@@ -225,6 +225,7 @@ class DataStorage(context: Context) {
         cacheAlarmFilterArray = filter.copyOf()
         val ed = sp.edit()
         for (i in alarm.indices){
+            Log.d(TAG, "saveAlarmFilterArray: ${alarm[i]} - ${filter[i]}" )
             ed.putBoolean(alarm[i], filter[i])
         }
         ed.apply()

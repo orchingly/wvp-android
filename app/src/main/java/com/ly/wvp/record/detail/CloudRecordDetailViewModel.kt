@@ -128,7 +128,7 @@ class CloudRecordDetailViewModel : ViewModel() {
 
     private var _recordFileList = MutableLiveData<List<CloudRecord>>()
 
-    private var _recordAction = MutableLiveData<List<AlarmInfo>>()
+    private var _recordAlarm = MutableLiveData<List<AlarmInfo>>()
 
     private var _netError = MutableLiveData<NetError>()
 
@@ -147,7 +147,7 @@ class CloudRecordDetailViewModel : ViewModel() {
 
     fun getRecordFileList(): LiveData<List<CloudRecord>> = _recordFileList
 
-    fun getRecordActionList(): LiveData<List<AlarmInfo>> = _recordAction
+    fun getRecordAlarmList(): LiveData<List<AlarmInfo>> = _recordAlarm
 
     fun getError(): LiveData<NetError> = _netError
 
@@ -184,7 +184,7 @@ class CloudRecordDetailViewModel : ViewModel() {
                     //加载报警信息
                     val alarmInfoList = loadAlarm(stream, startTime, endTime)
                     launch(Dispatchers.Main){
-                        _recordAction.value = alarmInfoList
+                        _recordAlarm.value = alarmInfoList
                     }
                 }
 
@@ -324,33 +324,6 @@ class CloudRecordDetailViewModel : ViewModel() {
             }
         }
         return ArrayList()
-    }
-
-    fun requestAction(calendar:Calendar, app: String, stream: String){
-        val yy = calendar.year.toString()
-        val mm = if (calendar.month < 10) "0${calendar.month}" else calendar.month.toString()
-        val dd = if (calendar.day < 10) "0${calendar.day}" else calendar.day.toString()
-
-        val startTime = "$yy-$mm-$dd 00:00:00"
-        val endTime = "$yy-$mm-$dd 23:59:59"
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val actionList = loadActionList(app, stream, startTime, endTime)
-                launch(Dispatchers.Main){
-                    _recordAction.value = actionList
-                }
-            }
-            catch (e: IOException){
-                Log.w(TAG, "requestCloudRecord: error ${e.message}" )
-                _netError.postValue( NetError(NetError.APP_ERROR, e.message?:"IOException"))
-            }
-            catch (e: IllegalStateException){
-                _netError.postValue(NetError(NetError.APP_ERROR, e.message?:"IllegalStateException"))
-            }
-            catch (e: Exception){
-                _netError.postValue(NetError(NetError.INTERNET_INVALID, e.message?:"Exception"))
-            }
-        }
     }
 
     /**
