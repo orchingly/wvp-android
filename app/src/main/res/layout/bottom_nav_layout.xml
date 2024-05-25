@@ -9,7 +9,7 @@
         android:id="@+id/nav_bottom_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="tab_device,tab_record,tab_settings,tab_multi_device_play" />
+        app:constraint_referenced_ids="tab_device,tab_settings,tab_multi_device_play" />
 
     <Button
         android:id="@+id/tab_device"
@@ -30,6 +30,7 @@
         android:background="@drawable/tab_bottom_bg"
         android:text="@string/tab_record"
         android:textColor="@color/white"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/tab_multi_device_play"
         app:layout_constraintEnd_toStartOf="@+id/tab_settings"
         app:layout_constraintStart_toEndOf="@+id/tab_multi_device_play"

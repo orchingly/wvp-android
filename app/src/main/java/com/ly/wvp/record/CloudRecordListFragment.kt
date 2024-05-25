@@ -29,6 +29,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ *
+ * @see [com.ly.wvp.device.play.LiveDetailPlayerFragment]
+ */
+@Deprecated("云端录像功能移动到设备详情页里边")
 class CloudRecordListFragment : Fragment() {
 
     companion object {
