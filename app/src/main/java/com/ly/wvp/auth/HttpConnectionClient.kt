@@ -36,7 +36,15 @@ object HttpConnectionClient {
 
         val http = if (config.enableTls) ServerUrl.HTTPS else ServerUrl.HTTP
 
-        if (TokenSession.getToken().isNotEmpty()) {
+        //如果保存了token则使用保存的
+        val token = if (config.sessionToken.isEmpty())
+            TokenSession.getToken()
+        else {
+            //更新token到单例TokenSession缓存
+            TokenSession.setToken(config.sessionToken)
+            config.sessionToken
+        }
+        if (token.isNotEmpty()) {
             return HttpUrl.Builder()
                 .scheme(http)
                 .host(host)

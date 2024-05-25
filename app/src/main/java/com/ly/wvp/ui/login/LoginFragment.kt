@@ -21,6 +21,7 @@ import androidx.navigation.fragment.findNavController
 
 import com.ly.wvp.R
 import com.ly.wvp.auth.NetError
+import com.ly.wvp.auth.TokenSession
 import com.ly.wvp.data.storage.DataStorage
 import com.ly.wvp.util.Utils
 import com.ly.wvp.util.shortToast
@@ -207,6 +208,13 @@ class LoginFragment : Fragment() {
         }
         else{
             ""
+        }
+        //保存密码的同时保存返回的token,避免退出app后登录状态丢失
+        config.sessionToken = if (isCheck){
+            TokenSession.getToken()
+        }
+        else{
+            TokenSession.EMPTY_TOKEN
         }
         storage.saveConfig(config)
     }

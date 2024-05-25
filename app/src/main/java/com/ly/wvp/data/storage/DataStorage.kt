@@ -8,6 +8,7 @@ import android.util.ArrayMap
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.ly.wvp.auth.TokenSession
 import com.ly.wvp.data.model.Device
 import com.ly.wvp.data.model.LoadDeviceChannel
 import com.ly.wvp.device.onescreen.SelectionItem
@@ -89,6 +90,7 @@ class DataStorage(context: Context) {
         ed.putBoolean(REMEMBER_PASSWD, config.rememberPasswd)
         ed.putString(PASSWD, config.passwd)
         ed.putString(USER, config.user)
+        ed.putString(TokenSession.TOKEN_HEADER, config.sessionToken)
         val success = ed.commit()
         //缓存
         if (success){
@@ -107,7 +109,8 @@ class DataStorage(context: Context) {
                 sp.getInt(PORT, 0),
                 sp.getBoolean(TLS, false), sp.getBoolean(REMEMBER_PASSWD, false),
                 sp.getString(PASSWD, "")?: "",
-                sp.getString(USER, "")?: "")
+                sp.getString(USER, "")?: "",
+                sp.getString(TokenSession.TOKEN_HEADER, TokenSession.EMPTY_TOKEN) ?: TokenSession.EMPTY_TOKEN)
             return mConfig as SettingsConfig
         }
     }
