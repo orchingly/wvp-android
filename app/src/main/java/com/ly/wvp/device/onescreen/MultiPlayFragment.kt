@@ -13,6 +13,7 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.constraintlayout.widget.Group
 import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavController
@@ -23,11 +24,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
+import com.donkingliang.groupedadapter.decoration.GroupedLinearItemDecoration
 import com.ly.wvp.R
-import com.ly.wvp.data.model.DeviceChanel
+import com.ly.wvp.data.model.Device
 import com.ly.wvp.data.storage.DataStorage
 import com.ly.wvp.device.play.MultiPlayManager
-import com.ly.wvp.util.shortToast
 import kotlin.math.min
 
 /**
@@ -40,6 +41,11 @@ class MultiPlayFragment : Fragment() {
     }
 
     private lateinit var viewModel: MultiPlayViewModel
+
+    /**
+     * 处理多选数据
+     */
+    private lateinit var filterViewModel: DeviceFilterViewModel
 
     /**
      * mask
@@ -55,6 +61,8 @@ class MultiPlayFragment : Fragment() {
      * 选项按钮
      */
     private lateinit var mSelectorBtn: ImageView
+
+    private lateinit var mTitle: TextView
 
     /**
      * 播放器列表
@@ -86,13 +94,7 @@ class MultiPlayFragment : Fragment() {
      * 设备备选列表
      * 保证和服务器返回的数据顺序一致
      */
-    private val mDeviceList = ArrayList<String>()
-
-    /**
-     * 通道列表
-     * 备选列表
-     */
-    private val mDeviceChannelList = ArrayMap<String, List<DeviceChanel>>()
+    private val mDeviceList = ArrayList<Device>()
 
     /**
      * 存储配置
@@ -103,7 +105,9 @@ class MultiPlayFragment : Fragment() {
 
     private lateinit var navController: NavController
 
-    private lateinit var mSelectionAdapter: DeviceListSelectAdapter
+//    private lateinit var mSelectionAdapter: DeviceListSelectAdapter
+
+    private lateinit var mDeviceFilterAdapter: ChannelGroupAdapter
 
     private lateinit var mNaviMenu: Group
 
@@ -117,8 +121,14 @@ class MultiPlayFragment : Fragment() {
     override fun onViewCreated(parent: View, savedInstanceState: Bundle?) {
         super.onViewCreated(parent, savedInstanceState)
         viewModel = ViewModelProvider(this)[MultiPlayViewModel::class.java]
+        filterViewModel = ViewModelProvider(this)[DeviceFilterViewModel::class.java]
+
         mSelectorBg = parent.findViewById(R.id.group_device_selector)
-        mSelectorBtn = parent.findViewById(R.id.device_selector)
+        mSelectorBtn = parent.findViewById(R.id.cloud_record_filter)
+        mSelectorBtn.visibility = VISIBLE
+        mTitle = parent.findViewById(R.id.action_bar_content_title)
+        mTitle.setText(R.string.multi_play_device_select)
+        parent.findViewById<ImageView>(R.id.action_bar_back_img).visibility = GONE
         multiPlayList = parent.findViewById(R.id.multi_play_list)
         mDeviceSelectList = parent.findViewById(R.id.device_select_list)
         mSelectCancel = parent.findViewById(R.id.device_s_cancel)
@@ -155,6 +165,17 @@ class MultiPlayFragment : Fragment() {
         mDialogBlank.setOnClickListener {
             hideDeviceSelectionDialog()
         }
+        filterViewModel.getDeviceFilterOptions().observe(viewLifecycleOwner){
+            handleDeviceFilterOptionChanged(it)
+        }
+    }
+
+    private fun handleDeviceFilterOptionChanged(selections: List<SelectionItem>) {
+        Log.d(TAG, "handleDeviceFilterOptionChanged: update selections")
+        mSelection.clear()
+        mSelection.addAll(selections)
+        hideDeviceSelectionDialog(true)
+        updatePlayList()
     }
 
     private fun initData() {
@@ -174,11 +195,8 @@ class MultiPlayFragment : Fragment() {
 //        mSelection.addAll(mStorage.getMultiPlayDeviceList())
         Log.d(TAG, "initData: selection size addAll = ${mSelection.size}" )
         mDeviceList.addAll(mStorage.getDeviceList())
-        mDeviceList.forEach {
-            val channel = mStorage.getChannelsByDeviceId(it)
-            mDeviceChannelList[it] = channel?.channels()?: ArrayList()
-        }
         checkValidSelections()
+        filterViewModel.initFilterOptions(mSelection, mStorage)
         Log.d(TAG, "initData: selection checkValidSelections size = ${mSelection.size}" )
     }
 
@@ -187,11 +205,16 @@ class MultiPlayFragment : Fragment() {
      */
     private fun checkValidSelections() {
         val fullSelectionList = ArrayList<SelectionItem>()
-        mDeviceChannelList.forEach { (k, v) ->
-            v.forEach {d->
-                d.getChannelId()?.let {
-                    val selection = SelectionItem(k,it)
-                    fullSelectionList.add(selection)
+        for (i in mDeviceList.indices){
+            val device = mDeviceList[i]
+            device.getChannelList()?.let {
+                for (j in it.indices){
+                    device.getDeviceId()?.let { dId ->
+                        it[j].getChannelId()?.let {cId ->
+                            val selection = SelectionItem(dId, cId)
+                            fullSelectionList.add(selection)
+                        }
+                    }
                 }
             }
         }
@@ -211,17 +234,7 @@ class MultiPlayFragment : Fragment() {
             hideDeviceSelectionDialog()
         }
         mSelectConfirm.setOnClickListener {
-            //保存
-            if (!mStorage.saveMultiPlayDeviceList(mSelection)){
-                //保存失败
-                Log.d(TAG, "bindSelectionConfirmListener: selection save failed")
-                R.string.device_selection_failed.shortToast(requireContext())
-                hideDeviceSelectionDialog()
-                return@setOnClickListener
-            }
-            //保存成功
-            hideDeviceSelectionDialog(true)
-            updatePlayList()
+            filterViewModel.saveChanged()
         }
     }
 
@@ -293,9 +306,7 @@ class MultiPlayFragment : Fragment() {
 
     private fun bindAdapter() {
         //初始化选项列表
-        mSelectionAdapter = DeviceListSelectAdapter(requireContext(), mSelection, mDeviceList, mDeviceChannelList)
-        mDeviceSelectList.adapter = mSelectionAdapter
-        mDeviceSelectList.layoutManager = LinearLayoutManager(requireContext())
+        bindDeviceFilterAdapter()
 
         //初始化播放列表
         playerHelper = ScrollPlayerHelper()
@@ -327,17 +338,47 @@ class MultiPlayFragment : Fragment() {
         })
     }
 
-    private fun hideDeviceSelectionDialog(shouldSave: Boolean = false){
-        //需要保存
-        if (!shouldSave){
-            val cache = mStorage.getMultiPlayDeviceList()
-            //选项变化,选项回退, 否则下次打开选中项和播放列表不一致
-            if (cache != mSelection){
-                Log.d(TAG, "hideDeviceSelectionDialog: selection rollback")
-                mSelection.clear()
-                mSelection.addAll(cache)
+    private val mCheckListener by lazy {
+        object : ChannelGroupAdapter.CheckChangeListener {
+            override fun handleChecked(groupPosition:Int, childPosition: Int, isChecked: Boolean) {
+                handleChannelChecked(groupPosition, childPosition, isChecked)
             }
         }
+    }
+
+    private fun bindDeviceFilterAdapter() {
+        mDeviceFilterAdapter = ChannelGroupAdapter(requireContext(), mDeviceList, ArrayList(mSelection), mCheckListener)
+        mDeviceSelectList.adapter = mDeviceFilterAdapter
+        mDeviceSelectList.layoutManager = LinearLayoutManager(requireContext())
+        val d = GroupedLinearItemDecoration(mDeviceFilterAdapter,20, null,20,null,20,null);
+        mDeviceSelectList.addItemDecoration(d)
+    }
+
+    private fun handleChannelChecked(
+        groupPosition: Int,
+        childPosition: Int,
+        checked: Boolean
+    ) {
+        val device = mDeviceList[groupPosition]
+        device.getChannelList()?.let {
+            val channel = it[childPosition].getChannelId()
+            Log.d(TAG, "onChildClick: ${device.getDeviceId()} - $channel checked: ${checked}")
+            filterViewModel.onChannelClicked(checked, device.getDeviceId(), channel)
+        }
+    }
+
+
+    private fun hideDeviceSelectionDialog(shouldSave: Boolean = false){
+        //需要保存
+//        if (!shouldSave){
+//            val cache = mStorage.getMultiPlayDeviceList()
+//            //选项变化,选项回退, 否则下次打开选中项和播放列表不一致
+//            if (cache != mSelection){
+//                Log.d(TAG, "hideDeviceSelectionDialog: selection rollback")
+//                mSelection.clear()
+//                mSelection.addAll(cache)
+//            }
+//        }
         //消去弹窗
         mSelectorBg.visibility = GONE
         //显示底部导航栏
@@ -346,11 +387,11 @@ class MultiPlayFragment : Fragment() {
 
     @SuppressLint("NotifyDataSetChanged")
     private fun showDeviceSelectionDialog(){
-        //隐藏底部导航栏
-//        mNaviMenu.visibility = GONE
-        //显示
-
-        mSelectionAdapter.notifyDataSetChanged()
+        //同步选中列表到UI
+        mDeviceFilterAdapter.syncCheckedList(mSelection)
+        //同步选中列表到view model
+        filterViewModel.syncFilterOptions(mSelection)
+        mDeviceFilterAdapter.notifyDataChanged()
         mSelectorBg.visibility = VISIBLE
     }
 

@@ -107,7 +107,7 @@ class DeviceListFragment : Fragment() {
             Log.d(TAG, "onViewCreated: device channel loaded total: ${it.channels().size}")
             val index = deviceAdapter.setDeviceChannelList(it.queryId(), it.channels())
             if (index >= 0){
-                storage.cacheDeviceAndChannels(it)
+                storage.cacheDeviceChannels(it)
                 deviceAdapter.notifyItemChanged(index)
             }
         }

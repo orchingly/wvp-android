@@ -25,4 +25,8 @@ data class SelectionItem(val deviceId: String, val channelId: String){
         result = 31 * result + channelId.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "${hashCode()} device[$deviceId-$channelId]"
+    }
 }

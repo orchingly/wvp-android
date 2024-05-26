@@ -10,6 +10,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.ly.wvp.auth.TokenSession
 import com.ly.wvp.data.model.Device
+import com.ly.wvp.data.model.DeviceChanel
 import com.ly.wvp.data.model.LoadDeviceChannel
 import com.ly.wvp.device.onescreen.SelectionItem
 
@@ -61,21 +62,14 @@ class DataStorage(context: Context) {
      */
     private var mSelectionsCache: ArrayList<SelectionItem>? = null
 
-    /**
-     * 设备和对应的通道列表缓存
-     * 仅缓存,不保存到文件
-     */
-    private val mDeviceChannelCache = ArrayMap<Device, LoadDeviceChannel>()
 
     /**
-     * Device缓存,用来快速查找Device, deviceId查找Device
+     * 设备列表,服务器数据的顺序一致
+     * channel了列表延迟加载更新
+     * 仅缓存，多个页面共享数据
      */
-    private val mDeviceCache = ArrayMap<String, Device>()
+    private val mDeviceListCache = ArrayList<Device>()
 
-    /**
-     * 缓存device列表,服务器返回顺序排列
-     */
-    private val mDeviceCacheWithOrder = ArrayList<String>()
 
     init {
         this.mContext = context.applicationContext
@@ -117,37 +111,39 @@ class DataStorage(context: Context) {
 
     /**
      * 缓存Device
+     * 删除已存在的device,添加到队列尾部
      */
     fun cacheDevice(device: Device){
-
-        device.getDeviceId()?.let {
-            //去重
-            if (mDeviceCacheWithOrder.contains(it)){
-                mDeviceCache.remove(it)
-                mDeviceCacheWithOrder.remove(it)
-            }
-            mDeviceCache[it] = device
-            mDeviceCacheWithOrder.add(it)
-        }?:{
-            Log.w(TAG, "cacheDevice: null device id $device")
+        if (mDeviceListCache.contains(device)){
+            mDeviceListCache.remove(device)
         }
+        mDeviceListCache.add(device)
     }
 
     /**
      * 缓存Channel
      */
-    fun cacheDeviceAndChannels(data: LoadDeviceChannel){
-        val device = mDeviceCache[data.queryId()]
-        device?.let {
-            mDeviceChannelCache[it] = data
-        }?: kotlin.run {
-            Log.w(TAG, "cacheDeviceAndChannels: device not found, ${data.queryId()}")
+    fun cacheDeviceChannels(data: LoadDeviceChannel){
+        var update = false
+        for (i in mDeviceListCache.indices){
+            val device = mDeviceListCache[i]
+            if (data.queryId() == device.getDeviceId()){
+                device.setChannelList(data.channels())
+                update = true
+            }
+        }
+        if (!update){
+            Log.w(TAG, "cacheDeviceAndChannels: failed not found channel's device ${data.queryId()}" )
         }
     }
 
-    fun getDeviceList(): ArrayList<String>{
-        return mDeviceCacheWithOrder
+    /**
+     * @return 一个拷贝数据列表
+     */
+    fun getDeviceList(): ArrayList<Device>{
+        return ArrayList(mDeviceListCache)
     }
+
     /**
      * @return 设备和通道
      */
@@ -155,8 +151,13 @@ class DataStorage(context: Context) {
         return mDeviceChannelCache
     }*/
 
-    fun getChannelsByDeviceId(id: String): LoadDeviceChannel?{
-        return mDeviceChannelCache[mDeviceCache[id]]
+    fun getChannelsByDeviceId(id: String): List<DeviceChanel>?{
+        for (i in mDeviceListCache.indices){
+            val device = mDeviceListCache[i]
+            if (device.getDeviceId() == id)
+                return device.getChannelList()
+        }
+        return emptyList()
     }
 
     /**

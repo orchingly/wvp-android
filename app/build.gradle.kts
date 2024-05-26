@@ -76,4 +76,6 @@ dependencies {
 
     //Json
     implementation("com.google.code.gson:gson:2.9.0")
+
+    implementation("com.github.donkingliang:GroupedRecyclerViewAdapter:2.4.3")
 }

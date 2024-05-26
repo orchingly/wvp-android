@@ -497,4 +497,11 @@ class Device{
     }
 
     /*======================设备主子码流逻辑END=========================*/
+
+    override fun equals(other: Any?): Boolean {
+        if (other is Device){
+            return other.deviceId == deviceId
+        }
+        return false
+    }
 }
