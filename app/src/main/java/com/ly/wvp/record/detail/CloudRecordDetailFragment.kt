@@ -106,7 +106,7 @@ open class CloudRecordDetailFragment() : Fragment() {
         mActionBack = view.findViewById(R.id.action_bar_back_img)
         storage = DataStorage.getInstance(requireContext())
 
-        mAlarmFilterViewModel = AlarmFilterViewModel(storage)
+        mAlarmFilterViewModel = ViewModelProvider(this, AlarmFilterViewModel.AlarmViewModelFactory(storage))[AlarmFilterViewModel::class.java]
         mAlarmFilterViewModel.getCheckedAlarmOptions().observe(viewLifecycleOwner){
             fileAdapter.onAlarmFilterChanged(it, mAlarmFilterViewModel.getAlarmOptionsArray())
         }

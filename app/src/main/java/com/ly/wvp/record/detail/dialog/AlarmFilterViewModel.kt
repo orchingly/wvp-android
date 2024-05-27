@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.ly.wvp.data.storage.DataStorage
 
 /**
@@ -18,6 +19,18 @@ class AlarmFilterViewModel(private val mStorage: DataStorage): ViewModel() {
         const val NORMAL = "正常"
         const val MOVE = "移动"
         const val OTHER = "异常"
+    }
+
+    /**
+     * ViewModel支持构造函数传参
+     */
+    class AlarmViewModelFactory(private val mStorage: DataStorage) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(AlarmFilterViewModel::class.java)) {
+                return AlarmFilterViewModel(mStorage) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
     }
 
     /**
