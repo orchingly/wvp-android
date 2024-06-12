@@ -253,10 +253,10 @@ class CloudRecordDetailViewModel : ViewModel() {
         return ArrayList()
     }
 
-    fun requestRecordCalendar(app: String, stream: String){
+    fun requestRecordCalendar(app: String, stream: String, year: Int, month: Int){
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val recordInfo = loadRecordCalendar(app, stream)
+                val recordInfo = loadRecordCalendar(app, stream, year, month)
                 launch(Dispatchers.Main){
                     _recordCalendar.value = recordInfo
                 }
@@ -277,7 +277,7 @@ class CloudRecordDetailViewModel : ViewModel() {
     /**
      * 查询有录像记录的日期
      */
-    private fun loadRecordCalendar(app: String, stream: String): ArrayList<Calendar>{
+    private fun loadRecordCalendar(app: String, stream: String, year: Int, month: Int): ArrayList<Calendar>{
         //原始请求url: //new api: http://192.168.200.2:18080/api/cloud/record/date/list?app=rtp&stream=34020000001320000002_34020000001320000002&year=2024&month=5
         val httpUrl = HttpConnectionClient.buildPublicHeader(config!!)
             .addPathSegments(ServerUrl.API_CLOUD_RECORD)
@@ -288,8 +288,8 @@ class CloudRecordDetailViewModel : ViewModel() {
             .addQueryParameter(APP, app)
             .addQueryParameter(STREAM, stream)
             //TODO:按月查询
-            .addQueryParameter("year", "2024")
-            .addQueryParameter("month", "5")
+            .addQueryParameter("year", year.toString())
+            .addQueryParameter("month", month.toString())
             .build()
         val request = Request.Builder()
             .url(httpUrl)

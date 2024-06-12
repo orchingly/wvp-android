@@ -148,7 +148,7 @@ open class CloudRecordDetailFragment() : Fragment() {
             handleError(it)
         }
 
-        viewModel.requestRecordCalendar(app, stream)
+        viewModel.requestRecordCalendar(app, stream, calendarView.selectedCalendar.year, calendarView.selectedCalendar.month)
         calendarView.setOnCalendarSelectListener(object : CalendarView.OnCalendarSelectListener {
             override fun onCalendarOutOfRange(calendar: Calendar?) {
 
@@ -168,6 +168,12 @@ open class CloudRecordDetailFragment() : Fragment() {
 
             }
         })
+        calendarView.setOnMonthChangeListener { year, month ->
+            Log.d(TAG, "onMonthChange: year $year, month $month")
+            viewModel.requestRecordCalendar(app, stream, year, month)
+        }
+
+
 
         val year = calendarView.curYear
         val month = calendarView.curMonth
